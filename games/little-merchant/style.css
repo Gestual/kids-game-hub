@@ -1,0 +1,579 @@
+:root {
+    --primary: #ff9800;
+    --primary-dark: #f57c00;
+    --accent: #ffeb3b;
+    --success: #4caf50;
+    --error: #f44336;
+    --text: #333;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+body.merchant-game {
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    color: var(--text);
+    overflow: hidden;
+    background: #e0f7fa;
+}
+
+.game-wrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#shop-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('assets/bg/stall_bg.png');
+    background-size: cover;
+    background-position: center;
+    z-index: -2;
+}
+
+#shop-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+    box-shadow: var(--shadow);
+}
+
+header h1 {
+    font-family: 'Fredoka One', cursive;
+    margin: 0;
+    color: var(--primary-dark);
+}
+
+.stats {
+    display: flex;
+    gap: 20px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.nav-btn {
+    background: white;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+}
+
+.nav-btn:hover {
+    transform: scale(1.1);
+}
+
+main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+        "customer shelf"
+        "basket cash"
+        "money tray";
+    gap: 15px;
+    padding: 15px;
+    max-width: 900px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Customer Area */
+#customer-area {
+    grid-area: customer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#customer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: slideIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#customer-avatar {
+    position: relative;
+    font-size: 100px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2));
+}
+
+.customer-acc {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    pointer-events: none;
+}
+
+/* Offset accessories for better fit */
+#customer-accessories .customer-acc:nth-child(1) {
+    transform: translateY(-30px);
+}
+
+#customer-accessories .customer-acc:nth-child(2) {
+    transform: translateY(0);
+}
+
+.character-base {
+    transition: transform 0.3s;
+    line-height: 1;
+}
+
+#customer-accessories {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.speech-bubble {
+    background: white;
+    padding: 15px 25px;
+    border-radius: 20px;
+    position: relative;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+    max-width: 200px;
+    text-align: center;
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid white;
+}
+
+/* Merchant Desk & Shelf Area */
+#shelf-area {
+    grid-area: shelf;
+    background: rgba(141, 110, 99, 0.9);
+    border-radius: 20px;
+    padding: 15px;
+    box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 15px;
+}
+
+.shelf {
+    display: flex;
+    justify-content: space-around;
+    padding-bottom: 10px;
+    border-bottom: 12px solid #5d4037;
+    position: relative;
+}
+
+.item {
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+    width: 80px;
+    text-align: center;
+    cursor: grab;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow);
+}
+
+.item:hover {
+    transform: translateY(-5px) rotate(2deg);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.item img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.item .price {
+    display: block;
+    font-weight: bold;
+    color: var(--primary-dark);
+    margin-top: 5px;
+    font-size: 0.9rem;
+}
+
+/* Merchant Desk Wrapper */
+#merchant-desk {
+    display: contents;
+}
+
+#basket-area {
+    grid-area: basket;
+    background: #ffccbc;
+    border: 4px dashed #ff5722;
+    border-radius: 20px;
+    width: auto;
+    min-height: 120px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.area-label {
+    position: absolute;
+    top: -12px;
+    background: var(--primary);
+    color: white;
+    padding: 2px 12px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+#basket-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.basket-item {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    animation: bounceIn 0.3s;
+}
+
+/* Cash Machine */
+#cash-machine {
+    grid-area: cash;
+    width: auto;
+    background: rgba(69, 90, 100, 0.9);
+    border-radius: 20px;
+    padding: 15px;
+    box-shadow: var(--shadow);
+}
+
+#register-screen {
+    background: #000;
+    border: 4px solid #78909c;
+    border-radius: 10px;
+    padding: 15px;
+    font-family: 'Courier New', Courier, monospace;
+    color: #00ff00;
+    min-height: 80px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+#broken-screen {
+    color: #ff0000;
+    font-weight: bold;
+    text-align: center;
+    animation: blink 0.5s infinite;
+}
+
+.machine-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.action-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.action-btn.success {
+    background: var(--success);
+}
+
+.action-btn.success:hover {
+    background: #388e3c;
+}
+
+/* Drawer Area (Right) */
+#drawer-container {
+    display: contents;
+}
+
+#change-tray {
+    grid-area: tray;
+    background: #f5f5f5;
+    border: 4px solid #ccc;
+    border-radius: 25px;
+    min-height: 120px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#change-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    flex: 1;
+}
+
+#money-drawer {
+    grid-area: money;
+    background: #b0bec5;
+    border-radius: 25px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.currency-group {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+.currency-group.coins {
+    flex-wrap: wrap;
+}
+
+.money {
+    cursor: grab;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+
+.money:active {
+    cursor: grabbing;
+    transform: scale(1.1);
+}
+
+.bill {
+    width: 70px;
+    height: 40px;
+    font-size: 0.9rem;
+    background: #4caf50;
+    color: white;
+    border-radius: 6px;
+    border: 2px solid #2e7d32;
+}
+
+.bill[data-value="5"] {
+    background: #81c784;
+}
+
+.bill[data-value="10"] {
+    background: #4caf50;
+}
+
+.bill[data-value="20"] {
+    background: #2e7d32;
+}
+
+.coin {
+    width: 45px;
+    height: 45px;
+    background: #ffc107;
+    color: #3e2723;
+    border-radius: 50%;
+    border: 3px solid #ef6c00;
+    font-size: 0.8rem;
+}
+
+.clear-btn {
+    background: #9e9e9e;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+/* Feedback Overlay */
+.feedback-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.feedback-content {
+    background: white;
+    padding: 50px;
+    border-radius: 30px;
+    text-align: center;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.next-btn {
+    background: var(--primary);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 20px;
+    border: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%) rotate(-10deg);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0) rotate(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    70% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 850px) {
+    main {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "customer"
+            "shelf"
+            "basket"
+            "cash"
+            "money"
+            "tray";
+        padding: 5px;
+        gap: 15px;
+        overflow-y: auto;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    #customer-avatar {
+        font-size: 80px;
+    }
+
+    .customer-acc {
+        font-size: 65px;
+    }
+
+    .shelf {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+}

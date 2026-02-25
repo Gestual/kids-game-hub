@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>Memory Match Kids</title>
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #FFD93D;
+            --accent-secondary: #6BCB77;
+            --accent-tertiary: #4D96FF;
+            --danger: #FF6B6B;
+            --pink: #FF92AD;
+            --text-dark: #2F3E46;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #ui-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 3px 3px 0 var(--text-dark);
+            margin: 10px 0;
+        }
+
+        #game-grid {
+            display: grid;
+            gap: 12px;
+            perspective: 1000px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+            border: 5px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card {
+            width: 70px;
+            height: 90px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, var(--pink), #ff758c);
+            color: white;
+        }
+
+        .card-back {
+            background: #ffffff;
+            color: #333;
+            transform: rotateY(180deg);
+        }
+
+
+
+        /* Mobile Responsiveness */
+        @media (max-width: 500px) {
+            h1 {
+                font-size: 1.8rem;
+                margin: 5px 0;
+            }
+
+            #game-grid {
+                gap: 8px;
+                padding: 10px;
+                max-width: 98vw;
+            }
+
+            .card {
+                width: 13vw;
+                height: 17vw;
+                max-width: 60px;
+                max-height: 80px;
+            }
+
+            .card-face {
+                font-size: 1.5rem;
+                border: 2px solid white;
+            }
+
+            #hud-text {
+                margin-top: 10px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui-container">
+        <h1 id="game-title">Memory Match</h1>
+        <div id="game-grid"></div>
+        <div id="hud-text">Pairs: <span id="pairs">0</span> / <span id="total-pairs">0</span></div>
+    </div>
+
+    <div id="win-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); flex-direction: column; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(10px);">
+        <h2 id="win-msg"
+            style="font-family: 'Luckiest Guy', cursive; font-size: 3rem; color: #FFD93D; text-shadow: 0 0 20px #FFD93D; text-align: center; padding: 20px;">
+            WORD MASTER! 🏆</h2>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang && window.parent && window.parent.Hub) {
+            lang = window.parent.Hub.state.lang;
+        }
+        lang = lang || 'en';
+
+        const difficulty = urlParams.get('diff') || 'easy';
+
+        const translations = {
+            en: { title: "Memory Match", win: "Amazing! You found all matches! 🧠✨", pairs: "Pairs: " },
+            fr: { title: "Mémory Match", win: "Génial ! Tu as tout trouvé ! 🧠✨", pairs: "Paires : " },
+            es: { title: "Emparejar Parejas", win: "¡Increíble! ¡Lo lograste! 🧠✨", pairs: "Parejas: " }
+        };
+        const t = translations[lang] || translations.en;
+
+        const config = {
+            easy: { cols: 4, rows: 2, pairs: 4 },
+            medium: { cols: 4, rows: 4, pairs: 8 },
+            hard: { cols: 6, rows: 4, pairs: 12 }
+        }[difficulty];
+
+        const allEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🦁', '🐯', '🐸', '🐷', '🐨', '🐵', '🐔', '🐧'];
+        const emojis = allEmojis.sort(() => 0.5 - Math.random()).slice(0, config.pairs);
+        const cardsData = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let lockBoard = false;
+
+        function init() {
+            document.getElementById('game-title').textContent = t.title;
+            document.getElementById('hud-text').firstChild.textContent = t.pairs;
+            const grid = document.getElementById('game-grid');
+            grid.style.gridTemplateColumns = `repeat(${config.cols}, max-content)`;
+            document.getElementById('total-pairs').textContent = config.pairs;
+
+            cardsData.forEach((emoji) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.emoji = emoji;
+                card.innerHTML = `
+                    <div class="card-face card-front">🌟</div>
+                    <div class="card-face card-back">${emoji}</div>
+                `;
+                card.onclick = () => flipCard(card);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (lockBoard || card.classList.contains('flipped') || flippedCards.includes(card)) return;
+            card.classList.add('flipped');
+            flippedCards.push(card);
+            if (flippedCards.length === 2) checkMatch();
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            if (card1.dataset.emoji === card2.dataset.emoji) {
+                matchedPairs++;
+                document.getElementById('pairs').textContent = matchedPairs;
+
+                // Keep them flipped, clear the array, unlock board
+                flippedCards = [];
+                lockBoard = false;
+
+                if (window.parent && window.parent.Hub) {
+                    window.parent.Hub.addXP(difficulty === 'easy' ? 40 : 60);
+                }
+
+                // Check Win AFTER updating matchedPairs
+                if (matchedPairs === config.pairs) {
+                    setTimeout(() => {
+                        const winOverlay = document.getElementById('win-overlay');
+                        document.getElementById('win-msg').innerHTML = t.win;
+                        winOverlay.style.display = 'flex';
+
+                        setTimeout(() => {
+                            if (window.parent && window.parent.Hub) {
+                                window.parent.Hub.addXP(200);
+                                window.parent.Hub.closeGame();
+                            }
+                        }, 2500);
+                    }, 500);
+                }
+            } else {
+                lockBoard = true;
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                    lockBoard = false;
+                }, 1000);
+            }
+        }
+        init();
+    </script>
+</body>
+
+</html>

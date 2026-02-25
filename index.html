@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>Kids Game Hub</title>
+    <link rel="stylesheet" href="style.css?v=1.1">
+</head>
+
+<body>
+    <div id="bg-layer"></div>
+    <div id="overlay-layer"></div>
+
+    <div id="app">
+        <!-- Main Hub Header -->
+        <header id="hub-header">
+            <div class="user-info">
+                <div class="avatar-circle" onclick="Hub.openPersonalize()">
+                    <div id="user-avatar-display" class="avatar-emoji">🗿</div>
+                    <div class="avatar-badge">✏️</div>
+                </div>
+                <div class="stats">
+                    <div class="xp-container">
+                        <span id="player-level">LVL 1</span>
+                        <div class="xp-bar">
+                            <div id="xp-fill"></div>
+                        </div>
+                    </div>
+                    <div class="currency">
+                        <span id="coin-count">0 💰</span>
+                        <span id="star-count">0 ⭐</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hub-controls">
+                <select id="lang-select">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                </select>
+                <button id="energy-btn">⚡ <span id="energy-count">5</span></button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard -->
+        <main id="hub-view">
+            <section id="game-grid-section">
+                <div class="section-header">
+                    <h2 data-i18n="games_title">Games</h2>
+                    <a href="#admin" id="admin-link" onclick="Hub.openAdmin()">Parent Panel 🔒</a>
+                </div>
+                <div id="game-grid"></div>
+            </section>
+
+        </main>
+
+        <!-- Kid-Friendly Ad Banner -->
+        <footer id="ad-banner">
+            <div id="ad-placeholder">
+                🌟 Kid-Safe Fun! 🌈
+                <p style="font-size: 0.6rem; margin: 5px 0 0;">(Child-Friendly Advertisement) - v1.1</p>
+            </div>
+        </footer>
+
+        <!-- Difficulty Selection Screen -->
+        <div id="difficulty-modal" class="hidden">
+            <div class="modal-content">
+                <h2 data-i18n="select_difficulty">Select Difficulty</h2>
+                <div class="difficulty-btns">
+                    <button class="diff-btn easy" onclick="Hub.startGameWithDifficulty('easy')">Easy 😊</button>
+                    <button class="diff-btn medium" onclick="Hub.startGameWithDifficulty('medium')">Medium 😎</button>
+                    <button class="diff-btn hard" onclick="Hub.startGameWithDifficulty('hard')">Hard 🦁</button>
+                </div>
+                <button class="close-modal" onclick="Hub.closeDifficultyModal()">✖</button>
+            </div>
+        </div>
+
+        <!-- Game Container (Iframe) -->
+        <div id="game-container" class="hidden">
+            <button id="close-game">✖</button>
+            <iframe id="game-iframe" src=""></iframe>
+        </div>
+
+        <!-- Dedicated Personalization Modal -->
+        <div id="personalize-modal" class="hidden">
+            <div class="personalize-content modal-content">
+                <div class="modal-header">
+                    <h2 data-i18n="personalize_title">Personalize</h2>
+                    <button class="close-modal" onclick="Hub.closePersonalize()">✖</button>
+                </div>
+
+                <div class="tabs">
+                    <button class="personalize-tab-btn active" data-i18n="tab_bg" data-tab="backgrounds"
+                        onclick="Hub.switchPersonalizeTab('backgrounds')">Backgrounds</button>
+                    <button class="personalize-tab-btn" data-i18n="tab_cards" data-tab="cards"
+                        onclick="Hub.switchPersonalizeTab('cards')">Avatars</button>
+                    <button class="personalize-tab-btn" data-i18n="tab_acc" data-tab="accessories"
+                        onclick="Hub.switchPersonalizeTab('accessories')">Accessories</button>
+                </div>
+
+                <div id="personalize-display" class="collectibles-grid">
+                    <!-- Collectibles injected here -->
+                </div>
+
+                <div class="preview-panel">
+                    <h3>Preview</h3>
+                    <div id="personalize-preview" class="avatar-circle"
+                        style="margin: 10px auto; width: 80px; height: 80px; font-size: 3rem;">🗿</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Alert Modal (Replaces native alerts) -->
+        <div id="alert-modal" class="hidden"
+            style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 3000; display: flex; align-items: center; justify-content: center;">
+            <div
+                style="background: var(--glass); border: 3px solid var(--accent); border-radius: 20px; padding: 30px; text-align: center; max-width: 80%; box-shadow: 0 0 30px rgba(0,242,255,0.3);">
+                <h2 id="alert-title" style="color: var(--accent); font-size: 2rem; margin-top: 0;">Notice</h2>
+                <p id="alert-msg" style="font-size: 1.2rem; color: white; margin: 20px 0;"></p>
+                <button onclick="document.getElementById('alert-modal').classList.add('hidden')"
+                    style="background: var(--accent); border: none; padding: 10px 30px; border-radius: 10px; font-family: 'Luckiest Guy', cursive; font-size: 1.2rem; cursor: pointer;">OK</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="main.js?v=1.1"></script>
+</body>
+
+</html>

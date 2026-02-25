@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>Crack the Code</title>
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #00f2ff;
+            --accent-secondary: #00ff88;
+            --danger: #ff0055;
+            --bg-dark: #0b0e14;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            /* Changed for Hub background */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #game-view {
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-family: 'Luckiest Guy', cursive;
+            text-align: center;
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+            margin: 0 0 10px;
+        }
+
+        #board {
+            flex: 1;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) transparent;
+        }
+
+        .attempt-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dots {
+            display: flex;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .dot {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .feedback {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            width: 40px;
+        }
+
+        .peg {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #333;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .peg.exact {
+            background: #00ff88;
+            box-shadow: 0 0 8px #00ff88;
+        }
+
+        .peg.partial {
+            background: #ffffff;
+            box-shadow: 0 0 8px #ffffff;
+        }
+
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #current-selection {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 5px;
+        }
+
+        .palette-btn {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, border-color 0.2s;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .palette-btn:hover {
+            transform: scale(1.05);
+            border-color: white;
+        }
+
+        .palette-btn:active {
+            transform: scale(0.9);
+        }
+
+        #action-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-check {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 4px 0 #00c2cc;
+        }
+
+        .btn-check:hover {
+            background: #00d2ee;
+        }
+
+        .btn-check:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .btn-clear {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Instructions Modal */
+        #instructions {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: #1a1f26;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 320px;
+            width: 90%;
+            border: 3px solid var(--accent);
+            text-align: center;
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .how-to-rule {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .help-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+            transform: translate3d(0, 0, 0);
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+
+        #win-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1100;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 400px) {
+            #game-view {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                margin: 5px 0;
+            }
+
+            .dot {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
+            }
+
+            .palette-btn {
+                font-size: 1.2rem;
+            }
+
+            .btn {
+                padding: 10px;
+                font-size: 1rem;
+            }
+
+            #instructions .modal {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button class="help-btn" onclick="showHelp()" id="help-btn-text">❓ HELP</button>
+
+    <div id="instructions">
+        <div class="modal">
+            <h2 style="font-family:'Luckiest Guy'; color:var(--accent);" id="how-to-text">HOW TO PLAY</h2>
+            <p id="rules-text">Guess the 4-symbol secret code!</p>
+            <p style="font-size: 0.8rem; color: var(--accent-secondary);" id="unique-text">Note: Each symbol in the code
+                is UNIQUE.</p>
+
+            <div class="how-to-rule">
+                <div class="peg exact"></div>
+                <span id="green-text"><b>GREEN</b>: Right symbol in the <br><b>RIGHT</b> place!</span>
+            </div>
+            <div class="how-to-rule">
+                <div class="peg partial"></div>
+                <span id="white-text"><b>WHITE</b>: Right symbol, but <br><b>WRONG</b> place.</span>
+            </div>
+
+            <button class="btn btn-check" style="width:100%; margin-top:10px;" onclick="closeHelp()"
+                id="got-it-text">GOT IT!</button>
+        </div>
+    </div>
+
+    <div id="game-view">
+        <h1 id="game-title">Crack the Code</h1>
+        <div id="board"></div>
+
+        <div id="controls">
+            <div id="current-selection">
+                <div class="dot" id="slot-0"></div>
+                <div class="dot" id="slot-1"></div>
+                <div class="dot" id="slot-2"></div>
+                <div class="dot" id="slot-3"></div>
+            </div>
+
+            <div class="color-palette" id="palette"></div>
+
+            <div id="action-btns">
+                <button class="btn btn-clear" onclick="clearCurrent()" id="clear-text">CLEAR</button>
+                <button class="btn btn-check" onclick="checkCode()" id="crack-text">CRACK IT!</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-screen">
+        <h1 id="win-msg" style="font-size: 3rem;">🔐 GRANTED!</h1>
+        <p style="font-size: 1.2rem;">Code Cracked Successfully!</p>
+    </div>
+
+    <script>
+        const symbols = ['💎', '🔥', '💧', '🌿', '⚡', '🌌', '🍄', '🌕'];
+        const colors = ['#00f2ff', '#ff0055', '#4D96FF', '#6BCB77', '#FFD93D', '#7000ff', '#FF92AD', '#ffffff'];
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        try {
+            if (!lang && window.parent && window.parent.Hub) {
+                lang = window.parent.Hub.state.lang;
+            }
+        } catch (e) {
+            console.warn("Could not access Hub state directly.");
+        }
+        lang = lang || 'en';
+
+        const difficulty = urlParams.get('diff') || 'easy';
+
+        let config = {
+            easy: { colors: 6, attempts: 10 },
+            medium: { colors: 7, attempts: 10 },
+            hard: { colors: 8, attempts: 12 }
+        }[difficulty];
+
+        const translations = {
+            en: {
+                title: "Crack the Code",
+                howTo: "HOW TO PLAY",
+                rules: "Guess the 4-symbol secret code!",
+                unique: "Note: Each symbol in the code is UNIQUE.",
+                green: "<b>GREEN</b>: Right symbol in the <br><b>RIGHT</b> place!",
+                white: "<b>WHITE</b>: Right symbol, but <br><b>WRONG</b> place.",
+                gotIt: "GOT IT!",
+                clear: "CLEAR",
+                crack: "CRACK IT!",
+                win: "🔐 GRANTED!",
+                winSub: "Code Cracked Successfully!",
+                loss: "🚨 LOCKED!",
+                lossSub: "Better luck next time!",
+                help: "❓ HELP"
+            },
+            fr: {
+                title: "Crack the Code",
+                howTo: "COMMENT JOUER",
+                rules: "Devine le code secret à 4 symboles !",
+                unique: "Note : Chaque symbole est UNIQUE.",
+                green: "<b>VERT</b> : Bon symbole au <br><b>BON</b> endroit !",
+                white: "<b>BLANC</b> : Bon symbole, mais <br><b>MAUVAIS</b> endroit.",
+                gotIt: "COMPRIS !",
+                clear: "EFFACER",
+                crack: "VALIDER",
+                win: "🔐 ACCÈS AUTORISÉ !",
+                winSub: "Code déchiffré avec succès !",
+                loss: "🚨 VERROUILLÉ !",
+                lossSub: "Réessaie encore !",
+                help: "❓ AIDE"
+            },
+            es: {
+                title: "Crack the Code",
+                howTo: "CÓMO JUGAR",
+                rules: "¡Adivina el código de 4 símbolos!",
+                unique: "Nota: Cada símbolo es ÚNICO.",
+                green: "<b>VERDE</b>: ¡Símbolo correcto en el <br><b>LUGAR</b> correcto!",
+                white: "<b>BLANCO</b>: Símbolo correcto, pero <br><b>LUGAR</b> equivocado.",
+                gotIt: "¡ENTENDIDO!",
+                clear: "BORRAR",
+                crack: "ADIVINAR",
+                win: "🔐 ¡ADMITIDO!",
+                winSub: "¡Código descifrado!",
+                loss: "🚨 ¡BLOQUEADO!",
+                lossSub: "¡Inténtalo de nuevo!",
+                help: "❓ AYUDA"
+            }
+        };
+
+        const t = translations[lang] || translations.en;
+
+        let secretCode = [];
+        let currentGuess = [];
+        let attempts = [];
+
+        function init() {
+            // Apply translations
+            document.getElementById('help-btn-text').textContent = t.help;
+            document.getElementById('how-to-text').textContent = t.howTo;
+            document.getElementById('rules-text').textContent = t.rules;
+            document.getElementById('unique-text').textContent = t.unique;
+            document.getElementById('green-text').innerHTML = t.green;
+            document.getElementById('white-text').innerHTML = t.white;
+            document.getElementById('got-it-text').textContent = t.gotIt;
+            document.getElementById('game-title').textContent = t.title;
+            document.getElementById('clear-text').textContent = t.clear;
+            document.getElementById('crack-text').textContent = t.crack;
+
+            // Generate secret (UNIQUE colors)
+            const availableIndices = Array.from({ length: config.colors }, (_, i) => i);
+            for (let i = 0; i < 4; i++) {
+                const idx = Math.floor(Math.random() * availableIndices.length);
+                secretCode.push(availableIndices.splice(idx, 1)[0]);
+            }
+
+            // Render palette
+            const palette = document.getElementById('palette');
+            for (let i = 0; i < config.colors; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'palette-btn';
+                btn.style.backgroundColor = colors[i] + '55'; // More opaque
+                btn.style.color = 'white'; // White for better contrast on colors
+                btn.innerHTML = symbols[i];
+                btn.onclick = () => addToGuess(i);
+                palette.appendChild(btn);
+            }
+
+            renderBoard();
+        }
+
+        function showHelp() {
+            document.getElementById('instructions').style.display = 'flex';
+        }
+        function closeHelp() {
+            document.getElementById('instructions').style.display = 'none';
+        }
+
+        function addToGuess(id) {
+            if (currentGuess.length < 4) {
+                if (currentGuess.includes(id)) {
+                    // Provide feedback for duplicate
+                    const slot = document.getElementById(`slot-${currentGuess.length}`);
+                    if (slot) {
+                        slot.classList.add('shake');
+                        setTimeout(() => slot.classList.remove('shake'), 400);
+                    }
+                    return;
+                }
+                currentGuess.push(id);
+                updateCurrentUI();
+            }
+        }
+
+        function clearCurrent() {
+            currentGuess = [];
+            updateCurrentUI();
+        }
+
+        function updateCurrentUI() {
+            for (let i = 0; i < 4; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                if (currentGuess[i] !== undefined) {
+                    slot.innerHTML = symbols[currentGuess[i]];
+                    slot.style.backgroundColor = colors[currentGuess[i]];
+                    slot.style.borderColor = colors[currentGuess[i]];
+                    slot.style.transform = 'scale(1.1)';
+                    setTimeout(() => slot.style.transform = 'scale(1)', 100);
+                } else {
+                    slot.innerHTML = '';
+                    slot.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                    slot.style.borderColor = 'rgba(255,255,255,0.2)';
+                }
+            }
+        }
+
+        function checkCode() {
+            if (currentGuess.length < 4) return;
+
+            let exact = 0;
+            let partial = 0;
+            let secretCopy = [...secretCode];
+            let guessCopy = [...currentGuess];
+
+            // Check exact
+            for (let i = 0; i < 4; i++) {
+                if (guessCopy[i] === secretCopy[i]) {
+                    exact++;
+                    secretCopy[i] = -1;
+                    guessCopy[i] = -2;
+                }
+            }
+
+            // Check partial
+            for (let i = 0; i < 4; i++) {
+                if (guessCopy[i] < 0) continue;
+                let foundIdx = secretCopy.indexOf(guessCopy[i]);
+                if (foundIdx !== -1) {
+                    partial++;
+                    secretCopy[foundIdx] = -1;
+                }
+            }
+
+            attempts.push({ guess: [...currentGuess], exact, partial });
+            renderBoard();
+
+            if (exact === 4) {
+                endGame(true);
+            } else if (attempts.length >= config.attempts) {
+                endGame(false);
+            }
+
+            clearCurrent();
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            attempts.forEach((att, idx) => {
+                const row = document.createElement('div');
+                row.className = 'attempt-row';
+
+                let dotsHtml = att.guess.map(id => `<div class="dot" style="background:${colors[id]}; border-color:${colors[id]}; width:30px; height:30px; font-size:1rem;">${symbols[id]}</div>`).join('');
+                let pegsHtml = Array(att.exact).fill('<div class="peg exact"></div>').join('') +
+                    Array(att.partial).fill('<div class="peg partial"></div>').join('') +
+                    Array(4 - att.exact - att.partial).fill('<div class="peg"></div>').join('');
+
+                row.innerHTML = `
+                    <div style="font-size:0.7rem; opacity:0.5; width:20px">${idx + 1}</div>
+                    <div class="dots">${dotsHtml}</div>
+                    <div class="feedback">${pegsHtml}</div>
+                `;
+                board.appendChild(row);
+                row.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        function endGame(win) {
+            document.getElementById('controls').classList.add('disabled');
+            const screen = document.getElementById('win-screen');
+            const msg = document.getElementById('win-msg');
+
+            screen.style.display = 'flex';
+            if (win) {
+                msg.innerHTML = t.win;
+                msg.style.color = "var(--accent-secondary)";
+                screen.querySelector('p').textContent = t.winSub;
+            } else {
+                msg.innerHTML = t.loss;
+                msg.style.color = "var(--danger)";
+                screen.querySelector('p').textContent = t.lossSub;
+            }
+
+            setTimeout(() => {
+                if (window.parent) {
+                    if (win) window.parent.postMessage({ type: 'addXP', amount: config.colors * 50 }, '*');
+                    window.parent.postMessage({ type: 'closeGame' }, '*');
+                }
+            }, 3000);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

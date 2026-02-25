@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>Where is Nil?</title>
+    <link rel="stylesheet" href="style.css?v=1.0">
+</head>
+
+<body>
+
+    <!-- Top HUD -->
+    <header id="game-header">
+        <button id="btn-back" onclick="HubAPI.close()">⬅ BACK</button>
+        <div id="status-bar">
+            <span>🕵️ <span id="tracks-count">0/5</span></span>
+            <span id="current-location">Loading...</span>
+        </div>
+        <button id="btn-open-computer">FLIGHT COMPUTER ✈️</button>
+    </header>
+
+    <!-- Main Game View -->
+    <main id="game-view">
+        <div id="investigate-panel">
+            <h2 id="inv-title">Arrived in <span id="country-name-display">...</span></h2>
+            <div id="dest-image-container" class="hidden">
+                <img id="dest-image" src="" alt="Destination">
+            </div>
+            <p id="inv-fact" class="country-fact">...</p>
+            <h3>Where did Nil go?</h3>
+            <div class="clue-buttons">
+                <button class="clue-btn" onclick="Game.investigate('airport')">🛫 Airport</button>
+                <button class="clue-btn" onclick="Game.investigate('museum')">🏛️ Museum</button>
+                <button class="clue-btn" onclick="Game.investigate('cafe')">☕ Cafe</button>
+            </div>
+            <div id="clues-container" class="clues-container">
+            </div>
+        </div>
+    </main>
+
+    <!-- Flight Animation Overlay -->
+    <div id="flight-animation-overlay" class="hidden">
+        <div id="map-container">
+            <canvas id="flight-canvas"></canvas>
+        </div>
+        <div class="flight-status" id="flight-status-text">✈️ EN ROUTE...</div>
+    </div>
+
+    <!-- Flight Computer Modal -->
+    <div id="flight-modal" class="hidden">
+        <div class="modal-content">
+            <h2 id="fc-title">Flight Computer</h2>
+            <p id="fc-desc">Select your next destination!</p>
+            <input type="text" id="country-search" placeholder="Search country..." onkeyup="Game.filterCountries()">
+            <div id="country-list">
+                <!-- Populated by JS -->
+            </div>
+            <button class="cancel-btn"
+                onclick="document.getElementById('flight-modal').classList.add('hidden')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Feedback Modal (Win/Loss/Wrong) -->
+    <div id="feedback-modal" class="hidden">
+        <div class="modal-content">
+            <h2 id="feedback-title">...</h2>
+            <p id="feedback-msg">...</p>
+            <button id="btn-feedback-ok" class="ok-btn">OK</button>
+        </div>
+    </div>
+
+    <script src="../../data/countries.js?v=2"></script>
+    <script src="game.js?v=2"></script>
+</body>
+
+</html>

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>Nonogram Kids</title>
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #FFD93D;
+            --accent-secondary: #6BCB77;
+            --accent-tertiary: #4D96FF;
+            --danger: #FF6B6B;
+            --pink: #FF92AD;
+            --text-dark: #2F3E46;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #ui-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 3px 3px 0 var(--text-dark);
+            margin: 10px 0;
+        }
+
+        /* View Management */
+        .view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        /* Level Select Styles */
+        #level-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .level-card {
+            aspect-ratio: 1;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            border: 3px solid transparent;
+            transition: 0.2s;
+            position: relative;
+            color: var(--text-dark);
+        }
+
+        .level-card:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+        }
+
+        .level-card.completed::after {
+            content: "✅";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: white;
+            border-radius: 50%;
+            padding: 2px;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .level-num {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.5rem;
+            color: var(--accent-tertiary);
+        }
+
+        /* Game Styles */
+        #game-container {
+            display: grid;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 15px;
+            border: 3px solid var(--accent);
+            gap: 2px;
+            box-shadow: 0 0 30px rgba(255, 217, 61, 0.1);
+        }
+
+        .cell {
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .hint {
+            background: none;
+            border: none;
+            cursor: default;
+            color: #ffffff;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .hint.top {
+            align-items: flex-end;
+            padding-bottom: 5px;
+        }
+
+        .hint.left {
+            justify-content: flex-end;
+            padding-right: 10px;
+        }
+
+        .cell.filled {
+            background: var(--accent-tertiary);
+            border-color: var(--accent-tertiary);
+            box-shadow: 0 0 10px var(--accent-tertiary);
+        }
+
+        .cell.marked {
+            color: var(--danger);
+            font-size: 1.5rem;
+        }
+
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+            cursor: pointer;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.1rem;
+            transition: 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 15px;
+            font-weight: bold;
+            color: var(--text-dark);
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .hint-btn {
+            background: var(--pink);
+            color: white;
+            border-radius: 12px;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.1rem;
+            transition: 0.2s;
+            box-shadow: 0 4px 0 #d1788d;
+        }
+
+        .hint-btn:hover {
+            background: #ff7ea1;
+        }
+
+        .hint-btn:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .cell.hinted {
+            animation: pulse-hint 1s infinite alternate;
+        }
+
+        #win-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        #win-overlay h2 {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 3rem;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent);
+            text-align: center;
+            padding: 20px;
+        }
+
+        @keyframes pulse-hint {
+            from {
+                box-shadow: 0 0 5px var(--accent);
+            }
+
+            to {
+                box-shadow: 0 0 20px var(--accent);
+            }
+        }
+
+        .mode-btn,
+        .hint-btn {
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 500px) {
+            h1 {
+                font-size: 1.8rem;
+                margin: 5px 0;
+            }
+
+            #level-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .level-num {
+                font-size: 1.2rem;
+            }
+
+            #controls {
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 5px;
+                gap: 10px;
+            }
+
+            .mode-btn,
+            .hint-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+            #game-container {
+                padding: 5px;
+                gap: 1px;
+                transform: scale(0.95);
+                transform-origin: top center;
+            }
+
+            .back-btn {
+                top: 10px;
+                left: 10px;
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui-container">
+        <button id="btn-back" class="back-btn hidden" onclick="showLevelSelect()">⬅ BACK</button>
+
+        <h1 id="main-title">Nonogram</h1>
+
+        <!-- Level Select View -->
+        <div id="view-levels" class="view active">
+            <p style="color:white; font-weight:900; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Solve the mystery
+                puzzles!</p>
+            <div id="level-grid"></div>
+        </div>
+
+        <div id="view-game" class="view">
+            <h2 id="game-subtitle" style="color:white; margin:0 0 10px;">Loading...</h2>
+            <div id="game-container"></div>
+            <div id="controls">
+                <button id="fill-mode" class="mode-btn active">FILL 🟦</button>
+                <button id="mark-mode" class="mode-btn">MARK ❌</button>
+                <button id="hint-btn" class="hint-btn" onclick="useHint()">HINT 💡</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-overlay">
+        <h2 id="win-msg">WORD MASTER! 🏆</h2>
+    </div>
+
+    <script src="../../data/nonograms.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang && window.parent && window.parent.Hub) {
+            lang = window.parent.Hub.state.lang;
+        }
+        lang = lang || 'en';
+
+        const difficulty = urlParams.get('diff') || 'easy';
+
+        const translations = {
+            en: {
+                solve: "Solve the mystery puzzles!",
+                fill: "FILL 🟦",
+                mark: "MARK ❌",
+                hint: "HINT 💡",
+                back: "⬅ BACK",
+                what: "What is it?",
+                awesome: "AWESOME! You discovered: ",
+                failLoad: "Could not load levels."
+            },
+            fr: {
+                solve: "Résous les puzzles mystères !",
+                fill: "REMPLIR 🟦",
+                mark: "MARQUER ❌",
+                hint: "INDICE 💡",
+                back: "⬅ RETOUR",
+                what: "C'est quoi ?",
+                awesome: "GÉNIAL ! Tu as découvert : ",
+                failLoad: "Impossible de charger les niveaux."
+            },
+            es: {
+                solve: "¡Resuelve los rompecabezas!",
+                fill: "LLENAR 🟦",
+                mark: "MARCAR ❌",
+                hint: "PISTA 💡",
+                back: "⬅ VOLVER",
+                what: "¿Qué es?",
+                awesome: "¡INCREÍBLE! Descubriste: ",
+                failLoad: "No se pudieron cargar los niveles."
+            }
+        };
+
+        const t = translations[lang] || translations.en;
+
+        const sizeMap = { 'easy': 5, 'medium': 10, 'hard': 15 };
+        const targetSize = sizeMap[difficulty] || 5;
+
+        let allPuzzles = [];
+        let completedLevels = JSON.parse(localStorage.getItem('nonogram_completed') || '[]');
+
+        let grid = [];
+        let currentLevel = null;
+        let mode = 'fill';
+        let currentBoard = [];
+
+        async function init() {
+            document.getElementById('main-title').textContent = lang === 'fr' ? 'Nonogramme' : (lang === 'es' ? 'Nonograma' : 'Nonogram');
+            document.querySelector('#view-levels p').textContent = t.solve;
+            document.getElementById('btn-back').textContent = t.back;
+            document.getElementById('fill-mode').innerHTML = t.fill;
+            document.getElementById('mark-mode').innerHTML = t.mark;
+            document.getElementById('hint-btn').innerHTML = t.hint;
+
+            try {
+                allPuzzles = window.NONOGRAM_DATA || [];
+                renderLevelSelect();
+            } catch (e) {
+                console.error("Failed to load nonograms:", e);
+                alert("Could not load levels.");
+            }
+        }
+
+        function renderLevelSelect() {
+            const gridEl = document.getElementById('level-grid');
+            gridEl.innerHTML = '';
+
+            const filtered = allPuzzles.filter(p => p.size === targetSize);
+
+            filtered.forEach((p, index) => {
+                const card = document.createElement('div');
+                card.className = 'level-card' + (completedLevels.includes(p.id) ? ' completed' : '');
+                card.innerHTML = `<span class="level-num">${index + 1}</span>`;
+                card.onclick = () => launchLevel(p);
+                gridEl.appendChild(card);
+            });
+
+            document.getElementById('view-levels').classList.add('active');
+            document.getElementById('view-game').classList.remove('active');
+            document.getElementById('btn-back').classList.add('hidden');
+            document.getElementById('main-title').classList.remove('hidden');
+        }
+
+        function showLevelSelect() {
+            renderLevelSelect();
+        }
+
+        function launchLevel(p) {
+            currentLevel = p;
+            grid = p.grid;
+            currentBoard = Array(p.size).fill().map(() => Array(p.size).fill(0));
+
+            renderGame();
+
+            document.getElementById('view-levels').classList.remove('active');
+            document.getElementById('view-game').classList.add('active');
+            document.getElementById('btn-back').classList.remove('hidden');
+            document.getElementById('main-title').classList.add('hidden');
+            document.getElementById('game-subtitle').textContent = t.what;
+        }
+
+        function getHints(arr) {
+            let hints = [];
+            let count = 0;
+            arr.forEach(val => {
+                if (val === 1) count++;
+                else if (count > 0) { hints.push(count); count = 0; }
+            });
+            if (count > 0) hints.push(count);
+            return hints.length ? hints : [0];
+        }
+
+        function renderGame() {
+            const size = currentLevel.size;
+            const topHints = Array(size).fill().map((_, c) => getHints(grid.map(row => row[c])));
+            const leftHints = grid.map(row => getHints(row));
+
+            const container = document.getElementById('game-container');
+            container.style.gridTemplateColumns = `repeat(${size + 1}, auto)`;
+            container.innerHTML = '';
+
+            // Adjust cell size for large grids
+            const cellSize = size > 10 ? '22px' : (size > 5 ? '30px' : '40px');
+            const hintSize = size > 10 ? '35px' : '50px';
+            const fontSize = size > 10 ? '0.6rem' : '0.8rem';
+
+            container.appendChild(createCell('', 'hint'));
+            topHints.forEach(h => {
+                const cell = createCell(h.join('\n'), 'hint top');
+                cell.style.width = cellSize;
+                cell.style.height = hintSize;
+                cell.style.fontSize = fontSize;
+                container.appendChild(cell);
+            });
+
+            for (let r = 0; r < size; r++) {
+                const lHint = createCell(leftHints[r].join(' '), 'hint left');
+                lHint.style.width = hintSize;
+                lHint.style.height = cellSize;
+                lHint.style.fontSize = fontSize;
+                container.appendChild(lHint);
+
+                for (let c = 0; c < size; c++) {
+                    const cell = createCell('', 'cell');
+                    cell.style.width = cellSize;
+                    cell.style.height = cellSize;
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    cell.onclick = () => handleCellClick(cell, r, c);
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        function createCell(text, className) {
+            const div = document.createElement('div');
+            div.className = className;
+            div.innerText = text;
+            div.style.whiteSpace = 'pre';
+            return div;
+        }
+
+        function handleCellClick(el, r, c) {
+            if (mode === 'fill') {
+                if (el.classList.contains('filled')) {
+                    el.classList.remove('filled');
+                    currentBoard[r][c] = 0;
+                } else {
+                    el.classList.add('filled');
+                    el.classList.remove('marked');
+                    el.innerText = '';
+                    currentBoard[r][c] = 1;
+                }
+            } else {
+                if (el.innerText === '❌') {
+                    el.innerText = '';
+                } else {
+                    el.innerText = '❌';
+                    el.classList.remove('filled');
+                    currentBoard[r][c] = 0;
+                }
+            }
+            checkWin();
+        }
+
+        function checkWin() {
+            let win = true;
+            const size = currentLevel.size;
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    if (grid[r][c] !== currentBoard[r][c]) win = false;
+                }
+            }
+            if (win) {
+                if (!completedLevels.includes(currentLevel.id)) {
+                    completedLevels.push(currentLevel.id);
+                    localStorage.setItem('nonogram_completed', JSON.stringify(completedLevels));
+                }
+                setTimeout(() => {
+                    const overlay = document.getElementById('win-overlay');
+                    document.getElementById('win-msg').innerHTML = `${t.awesome}<br>${currentLevel.name.toUpperCase()}! 🧠✨`;
+                    overlay.style.display = 'flex';
+
+                    if (window.parent && window.parent.Hub) {
+                        window.parent.Hub.addXP(size * 20);
+                    }
+
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        showLevelSelect();
+                    }, 2500);
+                }, 500);
+            }
+        }
+
+        document.getElementById('fill-mode').onclick = () => {
+            mode = 'fill';
+            document.getElementById('fill-mode').classList.add('active');
+            document.getElementById('mark-mode').classList.remove('active');
+        };
+        document.getElementById('mark-mode').onclick = () => {
+            mode = 'mark';
+            document.getElementById('mark-mode').classList.add('active');
+            document.getElementById('fill-mode').classList.remove('active');
+        };
+
+        function useHint() {
+            if (!currentLevel) return;
+            const emptyCorrectCells = [];
+            for (let r = 0; r < currentLevel.size; r++) {
+                for (let c = 0; c < currentLevel.size; c++) {
+                    if (grid[r][c] === 1 && currentBoard[r][c] === 0) {
+                        emptyCorrectCells.push({ r, c });
+                    }
+                }
+            }
+
+            if (emptyCorrectCells.length > 0) {
+                const randomCell = emptyCorrectCells[Math.floor(Math.random() * emptyCorrectCells.length)];
+                const cells = document.querySelectorAll('.cell');
+                const cellEl = Array.from(cells).find(el => parseInt(el.dataset.r) === randomCell.r && parseInt(el.dataset.c) === randomCell.c);
+                if (cellEl) {
+                    cellEl.classList.add('filled', 'hinted');
+                    currentBoard[randomCell.r][randomCell.c] = 1;
+                    checkWin();
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

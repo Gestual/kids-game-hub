@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Simplified SudoKids integrated for the hub -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>SudoKids</title>
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #FFD93D;
+            --accent-secondary: #6BCB77;
+            --accent-tertiary: #4D96FF;
+            --danger: #FF6B6B;
+            --text-dark: #2F3E46;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            color: #f0f0f0;
+        }
+
+        #ui-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 3px 3px 0 var(--text-dark);
+            margin: 10px 0;
+        }
+
+        #board-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 15px;
+            border: 2px solid var(--accent);
+            display: grid;
+            gap: 8px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+
+        .sub-block {
+            display: grid;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cell {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.2s;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell.fixed {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent);
+            cursor: default;
+        }
+
+        .cell.selected {
+            background: var(--accent) !important;
+            color: #000;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        #numpad {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .num-btn {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: none;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            cursor: pointer;
+            color: var(--accent-tertiary);
+            box-shadow: 0 4px 0 #ddd;
+            transition: 0.1s;
+        }
+
+        .num-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 500px) {
+            h1 {
+                font-size: 1.8rem;
+                margin: 5px 0;
+            }
+
+            #ui-container {
+                justify-content: flex-start;
+                padding-top: 10px;
+            }
+
+            #board-container {
+                padding: 5px;
+                gap: 4px;
+                max-width: 95vw;
+            }
+
+            .sub-block {
+                gap: 1px;
+                border-radius: 8px;
+            }
+
+            .cell {
+                width: 8.5vw;
+                height: 8.5vw;
+                font-size: 1.2rem;
+                max-width: 35px;
+                max-height: 35px;
+            }
+
+            #numpad {
+                margin-top: 10px;
+                padding: 10px;
+                gap: 5px;
+            }
+
+            .num-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui-container">
+        <h1>SudoKids</h1>
+        <div id="board-container"></div>
+        <div id="numpad"></div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang && window.parent && window.parent.Hub) {
+            lang = window.parent.Hub.state.lang;
+        }
+        lang = lang || 'en';
+
+        const difficulty = urlParams.get('diff') || 'easy';
+
+        const translations = {
+            en: { win: "Great job! Puzzle solved! 🌟" },
+            fr: { win: "Super ! Puzzle résolu ! 🌟" },
+            es: { win: "¡Buen trabajo! ¡Puzzle resuelto! 🌟" }
+        };
+        const t = translations[lang] || translations.en;
+
+        let config = {
+            easy: { size: 4, subSize: 2, empty: 4 },
+            medium: { size: 6, subSizeR: 2, subSizeC: 3, empty: 12 },
+            hard: { size: 9, subSize: 3, empty: 30 }
+        }[difficulty] || { size: 4, subSize: 2, empty: 4 };
+
+        let solution = [];
+        let currentGrid = [];
+        let selectedCell = null;
+
+        function generateGame() {
+            const size = config.size;
+            const subR = config.subSizeR || config.subSize;
+            const subC = config.subSizeC || config.subSize;
+
+            // Generate a valid solution using a shift pattern
+            solution = Array.from({ length: size }, () => Array(size).fill(0));
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    solution[r][c] = ((Math.floor(r / subR) + (r % subR) * subC + c) % size) + 1;
+                }
+            }
+
+            currentGrid = solution.map(row => [...row]);
+            let removed = 0;
+            const maxToRemove = Math.min(config.empty, size * size - 4);
+            while (removed < maxToRemove) {
+                let r = Math.floor(Math.random() * size);
+                let c = Math.floor(Math.random() * size);
+                if (currentGrid[r][c] !== 0) {
+                    currentGrid[r][c] = 0;
+                    removed++;
+                }
+            }
+        }
+
+        function init() {
+            generateGame();
+            renderBoard();
+            renderNumpad();
+        }
+
+        function renderBoard() {
+            const container = document.getElementById('board-container');
+            const size = config.size;
+            const subR = config.subSizeR || config.subSize;
+            const subC = config.subSizeC || config.subSize;
+
+            container.style.gridTemplateColumns = `repeat(${size / subC}, 1fr)`;
+            container.innerHTML = '';
+
+            const numBlocks = (size / subR) * (size / subC);
+            for (let b = 0; b < numBlocks; b++) {
+                const sub = document.createElement('div');
+                sub.className = 'sub-block';
+                sub.style.gridTemplateColumns = `repeat(${subC}, 1fr)`;
+
+                const startR = Math.floor(b / (size / subC)) * subR;
+                const startC = (b % (size / subC)) * subC;
+
+                for (let i = 0; i < subR; i++) {
+                    for (let j = 0; j < subC; j++) {
+                        const r = startR + i;
+                        const c = startC + j;
+                        const cell = document.createElement('div');
+                        cell.className = 'cell' + (currentGrid[r][c] !== 0 ? ' fixed' : '');
+                        cell.innerText = currentGrid[r][c] || '';
+                        cell.onclick = () => {
+                            if (!cell.classList.contains('fixed')) {
+                                document.querySelectorAll('.cell').forEach(el => el.classList.remove('selected'));
+                                cell.classList.add('selected');
+                                selectedCell = { r, c, el: cell };
+                            }
+                        };
+                        sub.appendChild(cell);
+                    }
+                }
+                container.appendChild(sub);
+            }
+        }
+
+        function renderNumpad() {
+            const pad = document.getElementById('numpad');
+            pad.innerHTML = '';
+            for (let i = 1; i <= config.size; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'num-btn';
+                btn.innerText = i;
+                btn.onclick = () => {
+                    if (selectedCell) {
+                        const { r, c, el } = selectedCell;
+                        if (solution[r][c] === i) {
+                            currentGrid[r][c] = i;
+                            el.innerText = i;
+                            el.classList.remove('selected');
+                            selectedCell = null;
+                            checkWin();
+                        } else {
+                            el.style.color = 'var(--danger)';
+                            setTimeout(() => el.style.color = '', 500);
+                        }
+                    }
+                };
+                pad.appendChild(btn);
+            }
+        }
+
+        function checkWin() {
+            if (currentGrid.every(row => row.every(cell => cell !== 0))) {
+                alert(t.win);
+                if (window.parent && window.parent.Hub) {
+                    window.parent.Hub.addXP(200);
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

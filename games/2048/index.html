@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>2048 - Hero Edition</title>
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --secondary: #4D96FF;
+            --bg: #2F3E46;
+            --tile-empty: #cad1d5;
+            --tile-2: #eee4da;
+            --tile-4: #ede0c8;
+            --tile-8: #f2b179;
+            --tile-16: #f59563;
+            --tile-32: #f67c5f;
+            --tile-64: #f65e3b;
+            --tile-128: #edcf72;
+            --tile-256: #edcc61;
+            --tile-512: #edc850;
+            --tile-1024: #edc53f;
+            --tile-2048: #edc22e;
+            --text-dark: #776e65;
+            --text-light: #f9f6f2;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #ui-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+            margin: 10px 0;
+        }
+
+        #game-board {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            background: #bbada0;
+            border-radius: 10px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            touch-action: none;
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            background: var(--tile-empty);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            transition: transform 0.1s, background-color 0.1s;
+        }
+
+        .tile-2 {
+            background-color: var(--tile-2);
+        }
+
+        .tile-4 {
+            background-color: var(--tile-4);
+        }
+
+        .tile-8 {
+            background-color: var(--tile-8);
+            color: var(--text-light);
+        }
+
+        .tile-16 {
+            background-color: var(--tile-16);
+            color: var(--text-light);
+        }
+
+        .tile-32 {
+            background-color: var(--tile-32);
+            color: var(--text-light);
+        }
+
+        .tile-64 {
+            background-color: var(--tile-64);
+            color: var(--text-light);
+        }
+
+        .tile-128 {
+            background-color: var(--tile-128);
+            color: var(--text-light);
+            font-size: 1.2rem;
+        }
+
+        .tile-256 {
+            background-color: var(--tile-256);
+            color: var(--text-light);
+            font-size: 1.2rem;
+        }
+
+        .tile-512 {
+            background-color: var(--tile-512);
+            color: var(--text-light);
+            font-size: 1.2rem;
+        }
+
+        .tile-1024 {
+            background-color: var(--tile-1024);
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .tile-2048 {
+            background-color: var(--tile-2048);
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .new-tile {
+            animation: pop 0.2s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        #hud {
+            margin-top: 20px;
+            text-align: center;
+            font-family: 'Luckiest Guy', cursive;
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(47, 62, 70, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            z-index: 10;
+            display: none;
+        }
+
+        #game-over h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        #game-over button {
+            background: var(--secondary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 2rem;
+                margin: 5px 0;
+            }
+
+            #game-board {
+                width: 280px;
+                height: 280px;
+                gap: 8px;
+                padding: 8px;
+            }
+
+            .tile {
+                font-size: 1.2rem;
+            }
+
+            #hud {
+                gap: 10px;
+            }
+
+            .stat-box {
+                padding: 8px 15px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui-container">
+        <h1>2048 HERO</h1>
+
+        <div id="game-board">
+            <div id="game-over">
+                <h2 id="over-msg" style="text-shadow: 2px 2px 0 #000;">Game Over!</h2>
+                <button onclick="resetGame()" id="retry-btn">Try Again</button>
+            </div>
+            <!-- Logic will fill cells -->
+        </div>
+
+        <div id="hud">
+            <div class="stat-box" id="score-label">Score: <span id="score">0</span></div>
+            <div class="stat-box" id="best-label">Best: <span id="best">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang && window.parent && window.parent.Hub) {
+            lang = window.parent.Hub.state.lang;
+        }
+        lang = lang || 'en';
+
+        const translations = {
+            en: { score: "SCORE", best: "BEST", win: "You Win!", over: "Game Over!", play: "New Game" },
+            fr: { score: "SCORE", best: "MAX", win: "Tu Gagnes !", over: "Partie Finie !", play: "Nouveau Jeu" },
+            es: { score: "PUNTOS", best: "MEJOR", win: "¡Ganaste!", over: "¡Fin del Juego!", play: "Nuevo Juego" }
+        };
+        const t = translations[lang] || translations.en;
+        const difficulty = urlParams.get('diff') || 'easy';
+
+        // Difficulty can affect the starting tiles or grid size, here we'll stick to 4x4 for classic
+        // and maybe adjust the probability of getting a 4 vs a 2.
+        const config = {
+            easy: { p4: 0.1 },
+            medium: { p4: 0.2 },
+            hard: { p4: 0.3 }
+        }[difficulty];
+
+        let board = Array(16).fill(0);
+        let score = 0;
+        let best = localStorage.getItem('2048_hero_best') || 0;
+
+        function init() {
+            document.getElementById('score-label').firstChild.textContent = t.score + ': ';
+            document.getElementById('best-label').firstChild.textContent = t.best + ': ';
+            document.getElementById('retry-btn').textContent = t.play;
+            document.getElementById('best').textContent = best;
+            addRandomTile();
+            addRandomTile();
+            render();
+        }
+
+        function addRandomTile() {
+            let empty = board.reduce((acc, val, idx) => (val === 0 ? acc.concat(idx) : acc), []);
+            if (empty.length > 0) {
+                let idx = empty[Math.floor(Math.random() * empty.length)];
+                board[idx] = Math.random() < config.p4 ? 4 : 2;
+                return true;
+            }
+            return false;
+        }
+
+        function render() {
+            const container = document.getElementById('game-board');
+            // Clear existing but keep game-over
+            const gameOver = document.getElementById('game-over');
+            container.innerHTML = '';
+            container.appendChild(gameOver);
+
+            board.forEach((val, idx) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile' + (val > 0 ? ` tile-${val}` : '');
+                if (val > 0) tile.textContent = val;
+                container.appendChild(tile);
+            });
+            document.getElementById('score').textContent = score;
+        }
+
+        function slide(row) {
+            let filtered = row.filter(val => val !== 0);
+            for (let i = 0; i < filtered.length - 1; i++) {
+                if (filtered[i] === filtered[i + 1]) {
+                    filtered[i] *= 2;
+                    score += filtered[i];
+                    filtered.splice(i + 1, 1);
+                }
+            }
+            while (filtered.length < 4) filtered.push(0);
+            return filtered;
+        }
+
+        function move(dir) {
+            let oldBoard = [...board];
+            for (let i = 0; i < 4; i++) {
+                let row = [];
+                if (dir === 'left' || dir === 'right') {
+                    row = [board[i * 4], board[i * 4 + 1], board[i * 4 + 2], board[i * 4 + 3]];
+                    if (dir === 'right') row.reverse();
+                    row = slide(row);
+                    if (dir === 'right') row.reverse();
+                    board[i * 4] = row[0]; board[i * 4 + 1] = row[1]; board[i * 4 + 2] = row[2]; board[i * 4 + 3] = row[3];
+                } else {
+                    row = [board[i], board[i + 4], board[i + 8], board[i + 12]];
+                    if (dir === 'down') row.reverse();
+                    row = slide(row);
+                    if (dir === 'down') row.reverse();
+                    board[i] = row[0]; board[i + 4] = row[1]; board[i + 8] = row[2]; board[i + 12] = row[3];
+                }
+            }
+
+            if (JSON.stringify(oldBoard) !== JSON.stringify(board)) {
+                addRandomTile();
+                render();
+                checkGameOver();
+            }
+        }
+
+        function checkGameOver() {
+            if (!board.includes(0)) {
+                // Check if any merges possible
+                let possible = false;
+                for (let i = 0; i < 16; i++) {
+                    if (i % 4 < 3 && board[i] === board[i + 1]) possible = true;
+                    if (i < 12 && board[i] === board[i + 4]) possible = true;
+                }
+                if (!possible) {
+                    document.getElementById('over-msg').textContent = t.over;
+                    document.getElementById('game-over').style.display = 'flex';
+                    if (score > best) {
+                        best = score;
+                        localStorage.setItem('2048_hero_best', best);
+                        document.getElementById('best').textContent = best;
+                    }
+                    if (window.parent && window.parent.Hub) {
+                        window.parent.Hub.addXP(Math.floor(score / 10));
+                    }
+                }
+            }
+        }
+
+        function resetGame() {
+            board = Array(16).fill(0);
+            score = 0;
+            document.getElementById('game-over').style.display = 'none';
+            init();
+        }
+
+        // SWIPE HANDLERS
+        let startX, startY;
+        document.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            if (!startX || !startY) return;
+            let endX = e.changedTouches[0].clientX;
+            let endY = e.changedTouches[0].clientY;
+            let dx = endX - startX;
+            let dy = endY - startY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (Math.abs(dx) > 30) move(dx > 0 ? 'right' : 'left');
+            } else {
+                if (Math.abs(dy) > 30) move(dy > 0 ? 'down' : 'up');
+            }
+            startX = startY = null;
+        }, { passive: true });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') move('left');
+            else if (e.key === 'ArrowRight') move('right');
+            else if (e.key === 'ArrowUp') move('up');
+            else if (e.key === 'ArrowDown') move('down');
+        });
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>Pixel Art Color</title>
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #FFD93D;
+            --accent-secondary: #6BCB77;
+            --accent-tertiary: #4D96FF;
+            --danger: #FF6B6B;
+            --pink: #FF92AD;
+            --text-dark: #2F3E46;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #ui-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 3px 3px 0 var(--text-dark);
+            margin: 10px 0;
+        }
+
+        /* View Management */
+        .view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        /* Level Select Styles */
+        #level-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .level-card {
+            aspect-ratio: 1;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            border: 3px solid transparent;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .level-card:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+        }
+
+        .level-card.completed::after {
+            content: "✅";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: white;
+            border-radius: 50%;
+            padding: 2px;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .level-num {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.5rem;
+            color: var(--accent-tertiary);
+        }
+
+        /* Game Styles */
+        #grid {
+            display: grid;
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+            border: 5px solid white;
+            gap: 2px;
+            box-shadow: var(--shadow);
+        }
+
+        .cell {
+            width: 35px;
+            height: 35px;
+            background: #f0f0f0;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            transition: 0.2s;
+        }
+
+        .cell.colored {
+            color: transparent !important;
+            transform: scale(0.95);
+        }
+
+        #palette {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 25px;
+            backdrop-filter: blur(5px);
+            max-width: 90%;
+            overflow-x: auto;
+        }
+
+        .color-btn {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 50%;
+            border: 3px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            transition: 0.2s;
+        }
+
+        .color-btn.active {
+            transform: scale(1.15);
+            border-color: var(--text-dark);
+        }
+
+        #hud {
+            margin-top: 15px;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.2rem;
+            color: white;
+            text-shadow: 2px 2px 0 var(--text-dark);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #palette::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        #palette::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 450px) {
+            h1 {
+                font-size: 1.8rem;
+                margin: 5px 0;
+            }
+
+            #grid {
+                transform: scale(0.9);
+                transform-origin: top center;
+                padding: 5px;
+                gap: 1px;
+                margin-bottom: 20px;
+            }
+
+            #palette {
+                padding: 8px;
+                max-width: 95vw;
+                margin-top: 10px;
+            }
+
+            .color-btn {
+                width: 35px;
+                height: 35px;
+                min-width: 35px;
+                font-size: 0.9rem;
+            }
+
+            .back-btn {
+                top: 10px;
+                left: 10px;
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+
+            #level-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+                padding: 10px;
+                gap: 10px;
+            }
+
+            #hud {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui-container">
+        <button id="btn-back" class="back-btn hidden" onclick="showLevelSelect()">⬅ BACK</button>
+
+        <h1 id="main-title">Pixel Art</h1>
+
+        <!-- Level Select View -->
+        <div id="view-levels" class="view active">
+            <p style="color:white; font-weight:900; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Pick a masterpiece to
+                color!</p>
+            <div id="level-grid"></div>
+        </div>
+
+        <!-- Game View -->
+        <div id="view-game" class="view">
+            <h2 id="game-subtitle" style="color:white; margin:0 0 10px;">Loading...</h2>
+            <div id="grid"></div>
+            <div id="palette"></div>
+            <div id="hud">Progress: <span id="progress">0</span>%</div>
+        </div>
+    </div>
+
+    <script src="../../data/pixel_art.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang && window.parent && window.parent.Hub) {
+            lang = window.parent.Hub.state.lang;
+        }
+        lang = lang || 'en';
+
+        const translations = {
+            en: {
+                solve: "Pick a masterpiece to color!",
+                back: "⬅ BACK",
+                progress: "Progress: ",
+                win: "MASTERPIECE COMPLETE! 🎨✨",
+                fail: "Could not load levels. Please check your data."
+            },
+            fr: {
+                solve: "Choisis un chef-d'œuvre à colorier !",
+                back: "⬅ RETOUR",
+                progress: "Progression : ",
+                win: "CHEF-D'ŒUVRE TERMINÉ ! 🎨✨",
+                fail: "Impossible de charger les niveaux. Vérifie tes données."
+            },
+            es: {
+                solve: "¡Elige una obra maestra para colorear!",
+                back: "⬅ VOLVER",
+                progress: "Progreso: ",
+                win: "¡OBRA MAESTRA COMPLETADA! 🎨✨",
+                fail: "No se pudieron cargar los niveles. Por favor, revisa tus datos."
+            }
+        };
+        const t = translations[lang] || translations.en;
+
+        const difficulty = urlParams.get('diff') || 'easy';
+        const sizeMap = { 'easy': 8, 'medium': 12, 'hard': 16 };
+        const targetSize = sizeMap[difficulty] || 8;
+
+        let allPatterns = [];
+        let completedLevels = JSON.parse(localStorage.getItem('pixel_art_completed') || '[]');
+
+        let selectedColor = 0;
+        let coloredCount = 0;
+        let totalToColor = 0;
+        let currentLevel = null;
+        let cellProblems = [];
+
+        async function init() {
+            document.getElementById('main-title').textContent = lang === 'fr' ? 'Pixel Art' : (lang === 'es' ? 'Arte de Píxeles' : 'Pixel Art');
+            document.querySelector('#view-levels p').textContent = t.solve;
+            document.getElementById('btn-back').textContent = t.back;
+            document.getElementById('hud').firstChild.textContent = t.progress;
+
+            try {
+                allPatterns = window.PIXEL_ART_DATA || [];
+                renderLevelSelect();
+            } catch (e) {
+                console.error("Failed to load pixel art:", e);
+                alert(t.fail);
+            }
+        }
+
+        function renderLevelSelect() {
+            const grid = document.getElementById('level-grid');
+            grid.innerHTML = '';
+
+            const filtered = allPatterns.filter(p => p.size === targetSize);
+
+            filtered.forEach((p, index) => {
+                const card = document.createElement('div');
+                card.className = 'level-card' + (completedLevels.includes(p.id) ? ' completed' : '');
+                card.innerHTML = `<span class="level-num">${index + 1}</span>`;
+                card.onclick = () => launchLevel(p);
+                grid.appendChild(card);
+            });
+
+            document.getElementById('view-levels').classList.add('active');
+            document.getElementById('view-game').classList.remove('active');
+            document.getElementById('btn-back').classList.add('hidden');
+            document.getElementById('main-title').classList.remove('hidden');
+        }
+
+        function showLevelSelect() {
+            renderLevelSelect();
+        }
+
+        function launchLevel(p) {
+            currentLevel = p;
+            coloredCount = 0;
+            totalToColor = p.grid.flat().filter(id => id !== 0).length;
+
+            generateProblems(p.grid);
+            renderGame(p);
+
+            document.getElementById('view-levels').classList.remove('active');
+            document.getElementById('view-game').classList.add('active');
+            document.getElementById('btn-back').classList.remove('hidden');
+            document.getElementById('main-title').classList.add('hidden');
+            document.getElementById('game-subtitle').textContent = p.name;
+            document.getElementById('progress').textContent = '0';
+        }
+
+        function generateProblems(grid) {
+            cellProblems = grid.map(row => row.map(id => {
+                if (id === 0) return "";
+                const type = Math.random() > 0.5 ? '+' : '-';
+                if (type === '+') {
+                    const v1 = Math.floor(Math.random() * id);
+                    const v2 = id - v1;
+                    return `${v1}+${v2}`;
+                } else {
+                    const v2 = Math.floor(Math.random() * 5) + 1;
+                    const v1 = id + v2;
+                    return `${v1}-${v2}`;
+                }
+            }));
+        }
+
+        function renderGame(p) {
+            const gridEl = document.getElementById('grid');
+            const paletteEl = document.getElementById('palette');
+
+            // Adjust cell size for larger grids
+            const cellSize = p.size > 12 ? '22px' : (p.size > 8 ? '28px' : '35px');
+            const fontSize = p.size > 12 ? '0.6rem' : '0.8rem';
+
+            gridEl.style.gridTemplateColumns = `repeat(${p.size}, ${cellSize})`;
+            paletteEl.innerHTML = '';
+            gridEl.innerHTML = '';
+
+            p.palette.forEach((color, id) => {
+                const btn = document.createElement('div');
+                btn.className = 'color-btn' + (id === selectedColor ? ' active' : '');
+                btn.style.backgroundColor = color;
+                btn.innerText = id;
+                btn.onclick = () => {
+                    selectedColor = id;
+                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+                paletteEl.appendChild(btn);
+            });
+
+            for (let r = 0; r < p.size; r++) {
+                for (let c = 0; c < p.size; c++) {
+                    const colorId = p.grid[r][c];
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.width = cellSize;
+                    cell.style.height = cellSize;
+                    cell.style.fontSize = fontSize;
+
+                    if (colorId === 0) {
+                        cell.style.visibility = 'hidden';
+                    } else {
+                        cell.innerText = cellProblems[r][c];
+                        cell.onclick = () => colorCell(cell, colorId);
+                    }
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function colorCell(el, id) {
+            if (id === selectedColor) {
+                if (!el.classList.contains('colored')) {
+                    el.classList.add('colored');
+                    el.style.backgroundColor = currentLevel.palette[id];
+                    coloredCount++;
+                    updateProgress();
+                    if (window.parent && window.parent.Hub) {
+                        window.parent.Hub.addXP(Math.max(1, Math.floor(10 / (currentLevel.size / 8))));
+                    }
+                }
+            } else {
+                el.style.backgroundColor = 'var(--danger)';
+                el.style.color = 'white';
+                setTimeout(() => {
+                    el.style.backgroundColor = '';
+                    el.style.color = '';
+                }, 300);
+            }
+        }
+
+        function updateProgress() {
+            const percent = Math.floor((coloredCount / totalToColor) * 100);
+            document.getElementById('progress').textContent = percent;
+            if (percent === 100) {
+                if (!completedLevels.includes(currentLevel.id)) {
+                    completedLevels.push(currentLevel.id);
+                    localStorage.setItem('pixel_art_completed', JSON.stringify(completedLevels));
+                }
+                setTimeout(() => {
+                    alert(t.win);
+                    if (window.parent && window.parent.Hub) {
+                        window.parent.Hub.addXP(currentLevel.size * 10);
+                    }
+                    showLevelSelect();
+                }, 500);
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

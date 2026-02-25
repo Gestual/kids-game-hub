@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <title>Hero Calculus</title>
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #FFD93D;
+            --accent-secondary: #6BCB77;
+            --accent-tertiary: #4D96FF;
+            --danger: #FF6B6B;
+            --text-dark: #2F3E46;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            color: #f0f0f0;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        #math-ui {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 90%;
+            max-width: 500px;
+            pointer-events: all;
+            background: rgba(20, 25, 35, 0.8);
+            padding: 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 30px rgba(255, 217, 61, 0.2);
+        }
+
+        #problem {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 2.5rem;
+            color: var(--accent);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .options {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .option-btn {
+            background: white;
+            color: var(--text-dark);
+            border: none;
+            border-radius: 15px;
+            padding: 12px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            flex: 1;
+            box-shadow: 0 4px 0 #ccc;
+            cursor: pointer;
+            transition: 0.1s;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-btn:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        #hud {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.5rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 10px;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 500px) {
+            #math-ui {
+                padding: 10px;
+                width: 95%;
+                top: 50px;
+            }
+
+            #problem {
+                font-size: 2rem;
+            }
+
+            .option-btn {
+                font-size: 1rem;
+                padding: 10px;
+            }
+
+            #hud {
+                font-size: 1.2rem;
+                top: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="hud">Distance: <span id="dist">0</span>m</div>
+
+    <div id="ui-overlay">
+        <div id="math-ui">
+            <div id="problem">?</div>
+            <div class="options">
+                <button class="option-btn" onclick="checkAnswer(this)">?</button>
+                <button class="option-btn" onclick="checkAnswer(this)">?</button>
+                <button class="option-btn" onclick="checkAnswer(this)">?</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="game-canvas"></canvas>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        if (!lang && window.parent && window.parent.Hub) {
+            lang = window.parent.Hub.state.lang;
+        }
+        lang = lang || 'en';
+
+        const difficulty = urlParams.get('diff') || 'easy';
+
+        const translations = {
+            en: { dist: "Distance: ", m: "m", quest: "Guess?" },
+            fr: { dist: "Distance : ", m: "m", quest: "Combien ?" },
+            es: { dist: "Distancia: ", m: "m", quest: "¿Cuánto?" }
+        };
+        const t = translations[lang] || translations.en;
+
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let distance = 0;
+        let speed = 2;
+        let currentProblem = { a: 0, b: 0, op: '+', ans: 0 };
+        let enemies = [];
+        let hero = { x: 100, y: 0, state: 'run', timer: 0 };
+        let groundY = 0;
+        let particles = [];
+        let score = 0;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            groundY = height - 200;
+            hero.y = groundY;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function spawnEnemy() {
+            enemies.push({ x: width + 50, y: groundY, color: '#FF6B6B' });
+        }
+
+        function generateProblem() {
+            let a, b, op, ans;
+            if (difficulty === 'easy') {
+                op = Math.random() > 0.5 ? '+' : '-';
+                a = Math.floor(Math.random() * 20) + 1;
+                b = Math.floor(Math.random() * 20) + 1;
+                if (op === '-' && a < b) [a, b] = [b, a];
+                ans = op === '+' ? a + b : a - b;
+            } else if (difficulty === 'medium') {
+                op = Math.random() > 0.5 ? '×' : '+';
+                if (op === '×') {
+                    a = Math.floor(Math.random() * 12) + 1;
+                    b = Math.floor(Math.random() * 10) + 2;
+                } else {
+                    a = Math.floor(Math.random() * 50) + 10;
+                    b = Math.floor(Math.random() * 50) + 10;
+                }
+                ans = op === '+' ? a + b : a * b;
+            } else {
+                op = Math.random() > 0.5 ? '÷' : '×';
+                if (op === '÷') {
+                    b = Math.floor(Math.random() * 9) + 2;
+                    ans = Math.floor(Math.random() * 12) + 1;
+                    a = ans * b;
+                } else {
+                    a = Math.floor(Math.random() * 20) + 5;
+                    b = Math.floor(Math.random() * 15) + 2;
+                    ans = a * b;
+                }
+            }
+
+            currentProblem = { a, b, op, ans };
+            document.getElementById('problem').textContent = `${a} ${op} ${b} = ?`;
+
+            const options = [ans];
+            while (options.length < 3) {
+                const wrong = ans + (Math.floor(Math.random() * 20) - 10);
+                if (wrong !== ans && wrong >= 0 && !options.includes(wrong)) options.push(wrong);
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach((btn, i) => {
+                btn.textContent = options[i];
+                btn.className = 'option-btn';
+            });
+
+            if (enemies.length === 0) spawnEnemy();
+            document.getElementById('dist').previousSibling.textContent = t.dist;
+        }
+
+        function checkAnswer(btn) {
+            const val = parseInt(btn.textContent);
+            if (val === currentProblem.ans) {
+                hero.state = 'attack';
+                hero.timer = 20;
+                score += 10;
+                distance += 5;
+
+                // Explode first enemy
+                if (enemies.length > 0) {
+                    createParticles(enemies[0].x, enemies[0].y - 30, enemies[0].color);
+                    enemies.shift();
+                }
+
+                setTimeout(generateProblem, 400);
+                if (window.parent && window.parent.Hub) {
+                    window.parent.Hub.addXP(difficulty === 'easy' ? 20 : 50);
+                }
+            } else {
+                btn.classList.add('wrong-anim');
+                createParticles(hero.x, hero.y - 50, '#FF4757');
+            }
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 5,
+                    life: 1,
+                    color
+                });
+            }
+        }
+
+        function drawHero(x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Run animation bobbing
+            let bob = hero.state === 'run' ? Math.sin(Date.now() / 100) * 5 : 0;
+            if (hero.timer > 0) {
+                ctx.translate(20, 0); // Lunge forward
+                hero.timer--;
+                if (hero.timer === 0) hero.state = 'run';
+            }
+
+            // Body
+            ctx.fillStyle = '#4D96FF';
+            ctx.fillRect(-15, -60 + bob, 30, 40);
+
+            // Head
+            ctx.fillStyle = '#FFE0BD';
+            ctx.beginPath();
+            ctx.arc(0, -75 + bob, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sword if attacking
+            if (hero.state === 'attack') {
+                ctx.strokeStyle = '#f1f1f1';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(10, -40);
+                ctx.lineTo(50, -60);
+                ctx.stroke();
+            }
+
+            // Legs
+            ctx.fillStyle = '#2F3E46';
+            let legOff = hero.state === 'run' ? Math.sin(Date.now() / 50) * 10 : 0;
+            ctx.fillRect(-12, -20 + bob + legOff, 8, 20);
+            ctx.fillRect(4, -20 + bob - legOff, 8, 20);
+
+            ctx.restore();
+        }
+
+        function drawEnemy(x, y) {
+            ctx.fillStyle = '#FF6B6B';
+            ctx.fillRect(x - 20, y - 50, 40, 50);
+            ctx.fillStyle = 'black';
+            ctx.fillRect(x - 10, y - 40, 5, 5);
+            ctx.fillRect(x + 5, y - 40, 5, 5);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Sky Gradient (Themed background)
+            let sky = ctx.createLinearGradient(0, 0, 0, groundY);
+            sky.addColorStop(0, '#0f0c29');
+            sky.addColorStop(0.5, '#302b63');
+            sky.addColorStop(1, '#24243e');
+            ctx.fillStyle = sky;
+            ctx.fillRect(0, 0, width, groundY);
+
+            // Stars
+            ctx.fillStyle = "white";
+            for (let i = 0; i < 50; i++) {
+                let x = (i * 137.5) % width;
+                let y = (i * 223.7) % (groundY - 50);
+                ctx.globalAlpha = 0.5 + Math.sin(Date.now() / 1000 + i) * 0.5;
+                ctx.fillRect(x, y, 2, 2);
+            }
+            ctx.globalAlpha = 1;
+
+            // Ground
+            ctx.fillStyle = '#1c1c1c';
+            ctx.fillRect(0, groundY, width, height - groundY);
+
+            // Parallax objects (Mountains)
+            ctx.fillStyle = '#2c3e50';
+            for (let i = 0; i < 5; i++) {
+                let x = (i * 400 - (Date.now() / 30) % 2000);
+                ctx.beginPath();
+                ctx.moveTo(x, groundY);
+                ctx.lineTo(x + 200, groundY - 150);
+                ctx.lineTo(x + 400, groundY);
+                ctx.fill();
+            }
+
+            // Update & Draw Enemies
+            enemies.forEach(e => {
+                if (hero.state === 'run') e.x -= speed;
+                drawEnemy(e.x, e.y);
+            });
+
+            // Draw Hero
+            drawHero(hero.x, hero.y);
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.5;
+                p.life -= 0.02;
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, 4, 4);
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+            ctx.globalAlpha = 1;
+
+            requestAnimationFrame(draw);
+        }
+
+        generateProblem();
+        draw();
+    </script>
+</body>
+
+</html>

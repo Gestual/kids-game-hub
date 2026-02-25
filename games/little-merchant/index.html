@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little Merchant - Kids Game Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Open+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="merchant-game">
+    <div class="game-wrapper">
+        <div id="shop-background"></div>
+        <div id="shop-overlay"></div>
+
+        <header>
+            <div class="stats">
+                <span>XP: <b id="xp-count">0</b></span>
+                <span>💰: <b id="coins-count">0</b></span>
+            </div>
+            <h1>🛒 La Marchande</h1>
+            <button class="nav-btn" onclick="goBack()">🏠</button>
+        </header>
+
+        <main>
+            <!-- Customer Area -->
+            <div id="customer-area">
+                <div id="customer-container">
+                    <div id="customer-avatar">
+                        <div class="character-base">😊</div>
+                        <div id="customer-accessories"></div>
+                    </div>
+                    <div id="customer-bubble" class="speech-bubble">Hello! I'd like some apples, please!</div>
+                </div>
+            </div>
+
+            <!-- Merchant Desk -->
+            <div id="merchant-desk">
+                <div id="basket-area" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <div class="area-label">Customer's Basket</div>
+                    <div id="basket-items"></div>
+                </div>
+
+                <div id="cash-machine" class="glass-panel">
+                    <div id="register-screen">
+                        <div id="broken-screen" class="hidden">⚠️ REGISTER ERROR</div>
+                        <div id="register-total">Total: 0.00€</div>
+                        <div id="register-paid" class="hidden">Paid: 0.00€</div>
+                        <div id="register-change" class="hidden">Change: 0.00€</div>
+                    </div>
+                    <div class="machine-buttons">
+                        <button onclick="completeSale()" class="action-btn">Ring Up!</button>
+                        <button onclick="checkChange()" class="action-btn success">Hand to Customer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shelf Area -->
+            <div id="shelf-area">
+                <div class="shelf">
+                    <div class="item" draggable="true" ondragstart="drag(event)" data-id="apple">
+                        <img src="assets/items/apple.png" alt="Apple">
+                        <span class="price">2.50€</span>
+                    </div>
+                    <div class="item" draggable="true" ondragstart="drag(event)" data-id="bread">
+                        <img src="assets/items/bread.png" alt="Bread">
+                        <span class="price">1.80€</span>
+                    </div>
+                    <div class="item" draggable="true" ondragstart="drag(event)" data-id="milk">
+                        <img src="assets/items/milk.png" alt="Milk">
+                        <span class="price">3.20€</span>
+                    </div>
+                    <div class="item" draggable="true" ondragstart="drag(event)" data-id="cheese">
+                        <img src="assets/items/cheese.png" alt="Cheese">
+                        <span class="price">4.50€</span>
+                    </div>
+                </div>
+                <div class="shelf">
+                    <div class="item" draggable="true" ondragstart="drag(event)" data-id="cupcake">
+                        <img src="assets/items/cupcake.png" alt="Cupcake">
+                        <span class="price">2.20€</span>
+                    </div>
+                    <div class="item" draggable="true" ondragstart="drag(event)" data-id="teddy_bear">
+                        <img src="assets/items/teddy_bear.png" alt="Teddy Bear">
+                        <span class="price">12.00€</span>
+                    </div>
+                    <div class="item" draggable="true" ondragstart="drag(event)" data-id="toy_car">
+                        <img src="assets/items/toy_car.png" alt="Toy Car">
+                        <span class="price">15.00€</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Money Drawer -->
+            <div id="drawer-container">
+                <div id="change-tray" ondrop="dropMoney(event)" ondragover="allowDrop(event)">
+                    <div class="area-label">Change Tray</div>
+                    <div id="change-items"></div>
+                    <button class="clear-btn" onclick="clearTray()">Clear Tray</button>
+                </div>
+
+                <div id="money-drawer">
+                    <div class="currency-group">
+                        <div class="money bill" draggable="true" ondragstart="dragMoney(event)" data-value="20">20€
+                        </div>
+                        <div class="money bill" draggable="true" ondragstart="dragMoney(event)" data-value="10">10€
+                        </div>
+                        <div class="money bill" draggable="true" ondragstart="dragMoney(event)" data-value="5">5€</div>
+                    </div>
+                    <div class="currency-group">
+                        <div class="money bill" draggable="true" ondragstart="dragMoney(event)" data-value="2">2€</div>
+                        <div class="money bill" draggable="true" ondragstart="dragMoney(event)" data-value="1">1€</div>
+                    </div>
+                    <div class="currency-group coins">
+                        <div class="money coin" draggable="true" ondragstart="dragMoney(event)" data-value="0.5">50¢
+                        </div>
+                        <div class="money coin" draggable="true" ondragstart="dragMoney(event)" data-value="0.2">20¢
+                        </div>
+                        <div class="money coin" draggable="true" ondragstart="dragMoney(event)" data-value="0.1">10¢
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Feedback Overlay -->
+    <div id="feedback" class="feedback-overlay hidden">
+        <div class="feedback-content">
+            <h2 id="feedback-msg">Fantastic Shopkeeper!</h2>
+            <div id="xp-earned">+10 XP</div>
+            <button onclick="nextCustomer()" class="next-btn">Next Customer ➔</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>

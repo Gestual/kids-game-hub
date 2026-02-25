@@ -1,0 +1,453 @@
+:root {
+    --bg-main: #0B0E14;
+    --glass: rgba(20, 30, 48, 0.85);
+    --glass-border: rgba(0, 242, 255, 0.3);
+    --accent: #00F2FF;
+    --accent-secondary: #FF00E4;
+    --text-main: #FFFFFF;
+    --font-heading: 'Luckiest Guy', cursive;
+    --font-main: 'Outfit', sans-serif;
+    --round: 15px;
+    --shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    /* Map Background */
+    background: radial-gradient(circle at center, rgba(27, 61, 92, 0.8) 0%, rgba(13, 30, 48, 0.9) 100%), url('world_map_3d.jpg');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Header */
+#game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--glass);
+    border-bottom: 2px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+}
+
+#btn-back {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 15px;
+    border-radius: var(--round);
+    cursor: pointer;
+    font-weight: bold;
+    font-family: var(--font-main);
+}
+
+#status-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--accent);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#btn-open-computer {
+    background: linear-gradient(135deg, var(--accent-secondary), var(--accent));
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--round);
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(255, 0, 228, 0.5);
+    transition: transform 0.2s;
+}
+
+#btn-open-computer:active {
+    transform: scale(0.95);
+}
+
+/* Main View */
+#game-view {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 20px;
+    /* Dotted world map overlay pattern */
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+    background-size: 40px 40px;
+}
+
+#investigate-panel {
+    background: var(--glass);
+    border: 3px solid var(--glass-border);
+    border-radius: var(--round);
+    padding: 25px;
+    width: 100%;
+    max-width: 600px;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    z-index: 50;
+    position: relative;
+}
+
+#inv-title {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    color: var(--text-main);
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+    margin-bottom: 5px;
+}
+
+.country-fact {
+    font-size: 1.1rem;
+    color: #ccc;
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+#dest-image-container {
+    width: 100%;
+    height: 180px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 3px solid var(--glass-border);
+    position: relative;
+    background: rgba(0, 0, 0, 0.5);
+    /* overridden by JS gradient */
+    display: flex;
+    justify-content: flex-end;
+    /* Align flag to the right */
+    align-items: flex-end;
+    /* Align flag to the bottom */
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+#dest-image {
+    width: auto;
+    height: 35%;
+    /* Smaller flag */
+    max-width: 40%;
+    object-fit: contain;
+    margin: 15px;
+    /* Spacing from corner */
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1.5px solid rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    background: white;
+    /* Ensure flag background is solid */
+}
+
+#dest-image:hover {
+    transform: scale(1.1) rotate(2deg);
+}
+
+.loading-spinner {
+    position: absolute;
+    color: var(--accent);
+    font-size: 2.5rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+#investigate-panel h3 {
+    color: var(--accent-secondary);
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.clue-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.clue-btn {
+    flex: 1;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.clue-btn:hover {
+    background: rgba(0, 242, 255, 0.2);
+}
+
+.clue-btn:active {
+    transform: scale(0.95);
+}
+
+.clue-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.clues-container {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.clue-text {
+    font-size: 1.2rem;
+    color: white;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid var(--accent-secondary);
+    animation: flash 0.3s ease-out;
+}
+
+@keyframes flash {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Modals */
+#flight-modal,
+#feedback-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--glass);
+    border: 4px solid var(--accent);
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(0, 242, 255, 0.3);
+    position: relative;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#fc-title,
+#feedback-title {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    color: var(--accent);
+    margin-bottom: 5px;
+}
+
+#fc-desc {
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+#country-search {
+    width: 100%;
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    outline: none;
+}
+
+#country-search:focus {
+    border-color: var(--accent);
+}
+
+#country-list {
+    flex: 1;
+    overflow-y: auto;
+    text-align: left;
+    max-height: 40vh;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.country-option {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+
+.country-option:hover {
+    background: rgba(0, 242, 255, 0.2);
+}
+
+.country-option:last-child {
+    border-bottom: none;
+}
+
+.cancel-btn {
+    background: transparent;
+    border: 2px solid var(--text-main);
+    color: var(--text-main);
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#feedback-msg {
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* --- Flight Animation --- */
+#flight-animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-main);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#map-container {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    aspect-ratio: 2 / 1;
+    background: url('flat_map.png') no-repeat center center;
+    background-size: 100% 100%;
+    border-radius: 12px;
+    border: 3px solid #6b4c30;
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    filter: sepia(0.8) hue-rotate(-10deg) saturate(1.8) contrast(1.1);
+}
+
+#map-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('parchment_clouds.png') no-repeat center center;
+    background-size: cover;
+    mix-blend-mode: multiply;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#flight-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.flight-status {
+    margin-top: 20px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    text-shadow: 0 0 10px var(--accent);
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Responsive constraints */
+@media (max-width: 600px) {
+    #inv-title {
+        font-size: 1.8rem;
+    }
+
+    .clue-buttons {
+        flex-direction: column;
+    }
+
+    #status-bar {
+        font-size: 1.2rem;
+    }
+
+    #btn-open-computer {
+        font-size: 1rem;
+        padding: 10px;
+    }
+}

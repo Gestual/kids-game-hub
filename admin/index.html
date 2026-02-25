@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <title>Admin Dashboard - Parents Only</title>
+    <style>
+        :root {
+            --primary: #4D96FF;
+            --secondary: #6BCB77;
+            --accent: #FFD93D;
+            --danger: #FF6B6B;
+            --bg: #f8f9fa;
+            --text: #2F3E46;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        h2 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+
+        button {
+            padding: 12px 25px;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        button.secondary {
+            background: var(--secondary);
+        }
+
+        button.danger {
+            background: var(--danger);
+        }
+
+        #nonogram-creator {
+            display: grid;
+            border: 2px solid #ddd;
+            gap: 2px;
+            background: #ddd;
+            width: fit-content;
+            margin: 20px 0;
+        }
+
+        .edit-cell {
+            width: 30px;
+            height: 30px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .edit-cell.active {
+            background: var(--text);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #nav-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #eee;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="nav-back" onclick="window.location.href='../index.html'">← Back to Hub</button>
+
+    <div class="container">
+        <h1>Parent Control Center</h1>
+
+        <div class="section">
+            <h2>Player Stats</h2>
+            <div class="grid-inputs">
+                <div class="input-group">
+                    <label>XP</label>
+                    <input type="number" id="xp-input">
+                </div>
+                <div class="input-group">
+                    <label>Level</label>
+                    <input type="number" id="level-input">
+                </div>
+                <div class="input-group">
+                    <label>Coins</label>
+                    <input type="number" id="coins-input">
+                </div>
+                <div class="input-group">
+                    <label>Energy (Max 5)</label>
+                    <input type="number" id="energy-input" max="5">
+                </div>
+            </div>
+            <div class="input-group" style="margin-top: 20px;">
+                <label>
+                    <input type="checkbox" id="disable-timer-cb"> Disable Rest Timer (No 5-min breaks)
+                </label>
+            </div>
+            <button onclick="saveStats()">Save Player Stats</button>
+        </div>
+
+        <div class="section">
+            <h2>Nonogram Puzzle Creator</h2>
+            <p>Click cells to create a new puzzle pattern.</p>
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label>Grid Size</label>
+                <select id="grid-size" onchange="createEditGrid()">
+                    <option value="5">5x5 (Easy)</option>
+                    <option value="8">8x8 (Medium)</option>
+                    <option value="10">10x10 (Hard)</option>
+                </select>
+            </div>
+            <div id="nonogram-creator"></div>
+            <div class="btn-row">
+                <button class="secondary" onclick="exportPuzzle()">Export JSON Pin</button>
+                <button class="secondary" onclick="savePuzzle()">Save to Game</button>
+            </div>
+            <textarea id="puzzle-output"
+                style="width: 100%; height: 60px; margin-top: 10px; border-radius: 10px; padding: 10px; font-family: monospace;"></textarea>
+        </div>
+
+        <div class="section" style="border-top: 20px solid #f8f9fa; padding-top: 20px;">
+            <h2>Danger Zone</h2>
+            <button class="danger" onclick="resetProgress()">Reset All Progress</button>
+        </div>
+    </div>
+
+    <script>
+        let state = JSON.parse(localStorage.getItem('kids_hub_state')) || {};
+
+        function loadStats() {
+            document.getElementById('xp-input').value = state.xp || 0;
+            document.getElementById('level-input').value = state.level || 1;
+            document.getElementById('coins-input').value = state.coins || 100;
+            document.getElementById('energy-input').value = state.energy || 5;
+            document.getElementById('disable-timer-cb').checked = localStorage.getItem('admin_disable_timer') === 'true';
+        }
+
+        function saveStats() {
+            state.xp = parseInt(document.getElementById('xp-input').value);
+            state.level = parseInt(document.getElementById('level-input').value);
+            state.coins = parseInt(document.getElementById('coins-input').value);
+            state.energy = parseInt(document.getElementById('energy-input').value);
+            localStorage.setItem('kids_hub_state', JSON.stringify(state));
+
+            const disableTimer = document.getElementById('disable-timer-cb').checked;
+            localStorage.setItem('admin_disable_timer', disableTimer ? 'true' : 'false');
+
+            alert("Stats and Settings saved!");
+        }
+
+        function resetProgress() {
+            if (confirm("Are you sure? This will delete all XP, Coins, and Unlocks!")) {
+                localStorage.removeItem('kids_hub_state');
+                location.reload();
+            }
+        }
+
+        // Nonogram Creator
+        function createEditGrid() {
+            const size = parseInt(document.getElementById('grid-size').value);
+            const container = document.getElementById('nonogram-creator');
+            container.style.gridTemplateColumns = `repeat(${size}, 30px)`;
+            container.innerHTML = '';
+            for (let i = 0; i < size * size; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'edit-cell';
+                cell.onclick = () => cell.classList.toggle('active');
+                container.appendChild(cell);
+            }
+        }
+
+        function exportPuzzle() {
+            const size = parseInt(document.getElementById('grid-size').value);
+            const cells = document.querySelectorAll('.edit-cell');
+            let pattern = [];
+            for (let r = 0; r < size; r++) {
+                let row = [];
+                for (let c = 0; c < size; c++) {
+                    row.push(cells[r * size + c].classList.contains('active') ? 1 : 0);
+                }
+                pattern.push(row);
+            }
+            document.getElementById('puzzle-output').value = JSON.stringify(pattern);
+        }
+
+        function savePuzzle() {
+            exportPuzzle();
+            const pattern = JSON.parse(document.getElementById('puzzle-output').value);
+            const size = pattern.length;
+            const diff = size === 5 ? 'easy' : (size === 8 ? 'medium' : 'hard');
+
+            let customPuzzles = JSON.parse(localStorage.getItem('custom_nonograms')) || { easy: [], medium: [], hard: [] };
+            customPuzzles[diff].push(pattern);
+            localStorage.setItem('custom_nonograms', JSON.stringify(customPuzzles));
+            alert("Puzzle saved to the game! Kids can now encounter it in Nonogram.");
+        }
+
+        window.onload = () => {
+            loadStats();
+            createEditGrid();
+        };
+    </script>
+</body>
+
+</html>
