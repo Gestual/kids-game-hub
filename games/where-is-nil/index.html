@@ -19,7 +19,10 @@
             <span>🕵️ <span id="tracks-count">0/5</span></span>
             <span id="current-location">Loading...</span>
         </div>
-        <button id="btn-open-computer">FLIGHT COMPUTER ✈️</button>
+        <div class="header-buttons">
+            <button id="btn-open-map">WORLD MAP 🗺️</button>
+            <button id="btn-open-computer">FLIGHT COMPUTER ✈️</button>
+        </div>
     </header>
 
     <!-- Main Game View -->
@@ -69,6 +72,23 @@
             <h2 id="feedback-title">...</h2>
             <p id="feedback-msg">...</p>
             <button id="btn-feedback-ok" class="ok-btn">OK</button>
+        </div>
+    </div>
+
+    <!-- World Map Modal -->
+    <div id="world-map-modal" class="hidden">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2 id="wm-title">World Map</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('world-map-modal').classList.add('hidden')">✖</button>
+            </div>
+            <div id="scrollable-map-container">
+                <div id="interactive-map">
+                    <img src="world_map_3d.jpg" alt="World Map" id="base-map-img">
+                    <div id="map-pins-container"></div>
+                </div>
+            </div>
         </div>
     </div>
 

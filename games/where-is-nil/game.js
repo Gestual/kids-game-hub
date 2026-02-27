@@ -127,6 +127,7 @@ const Game = {
         document.querySelector('#investigate-panel h3').textContent = t.where_did;
 
         document.getElementById('btn-open-computer').onclick = () => this.openFlightComputer();
+        document.getElementById('btn-open-map').onclick = () => this.openWorldMap();
         document.getElementById('btn-feedback-ok').onclick = () => this.handleFeedbackOk();
     },
 
@@ -170,8 +171,19 @@ const Game = {
 
         let clue = "";
 
+        const continentNames = {
+            'Africa': { en: 'Africa', fr: 'Afrique', es: 'África' },
+            'Asia': { en: 'Asia', fr: 'Asie', es: 'Asia' },
+            'Europe': { en: 'Europe', fr: 'Europe', es: 'Europa' },
+            'North America': { en: 'North America', fr: 'Amérique du Nord', es: 'América del Norte' },
+            'South America': { en: 'South America', fr: 'Amérique du Sud', es: 'América del Sur' },
+            'Oceania': { en: 'Oceania', fr: 'Océanie', es: 'Oceanía' },
+            'Antarctica': { en: 'Antarctica', fr: 'Antarctique', es: 'Antártida' }
+        };
+
         if (locationType === 'airport') {
-            clue = t.clue_airport.replace('{continent}', this.nextCountry.continent);
+            const translatedContinent = continentNames[this.nextCountry.continent] ? continentNames[this.nextCountry.continent][lang] : this.nextCountry.continent;
+            clue = t.clue_airport.replace('{continent}', translatedContinent);
             // Also append a fact to airport to give more info
             clue += " " + t.clue_fact.replace('{fact}', this.nextCountry.fact[lang]);
         } else if (locationType === 'museum') {
@@ -208,26 +220,22 @@ const Game = {
         }
         spinner.style.display = 'block';
 
-        // Apply a continent-based background
-        const continentLayouts = {
-            'Africa': { bg: 'url("land_africa.png")', grad: 'linear-gradient(to bottom, #FFB75E, #ED8F03)' },
-            'Asia': { bg: 'url("land_asia.png")', grad: 'linear-gradient(to bottom, #56CCF2, #2F80ED)' },
-            'Europe': { bg: 'url("land_europe.png")', grad: 'linear-gradient(to bottom, #7F00FF, #E100FF)' },
-            'North America': { bg: 'url("land_americas.png")', grad: 'linear-gradient(to bottom, #11998e, #38ef7d)' },
-            'South America': { bg: 'url("land_americas.png")', grad: 'linear-gradient(to bottom, #00b09b, #96c93d)' },
-            'Oceania': { bg: 'none', grad: 'linear-gradient(to bottom, #2980B9, #6DD5FA, #ffffff)' },
-            'Antarctica': { bg: 'none', grad: 'linear-gradient(to bottom, #E0EAFC, #CFDEF3)' }
-        };
+        // Apply a realistic country-specific AI generated image as background
+        const prompt = `${this.currentCountry.name.en} landscape monument beautiful photography`;
+        const bgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
 
-        const layout = continentLayouts[this.currentCountry.continent] || continentLayouts['Europe'];
-        imgContainer.style.background = layout.grad;
-        if (layout.bg !== 'none') {
-            imgContainer.style.backgroundImage = layout.bg;
-            imgContainer.style.backgroundSize = 'cover';
-            imgContainer.style.backgroundPosition = 'center';
-        } else {
-            imgContainer.style.backgroundImage = 'none';
-        }
+        imgContainer.style.background = `linear-gradient(to bottom, #56CCF2, #2F80ED)`; // default while loading
+
+        const bgImg = new Image();
+        bgImg.onload = () => {
+            imgContainer.style.background = `url("${bgUrl}") center/cover no-repeat, linear-gradient(to bottom, #56CCF2, #2F80ED)`;
+        };
+        bgImg.onerror = () => {
+            // Revert back to continent if the AI image fails
+            console.warn("AI Image failed to load, falling back to gradient.");
+            imgContainer.style.background = `linear-gradient(to bottom, #56CCF2, #2F80ED)`;
+        };
+        bgImg.src = bgUrl;
 
         // Use FlagCDN for a reliable, instantly-loaded image of the country's flag
         const flagUrl = `https://flagcdn.com/w320/${this.currentCountry.id.toLowerCase()}.png`;
@@ -250,6 +258,68 @@ const Game = {
             .split('')
             .map(char => 127397 + char.charCodeAt());
         return String.fromCodePoint(...codePoints);
+    },
+
+    openWorldMap() {
+        document.getElementById('world-map-modal').classList.remove('hidden');
+        this.renderMapPins();
+    },
+
+    renderMapPins() {
+        const container = document.getElementById('map-pins-container');
+        const mapImg = document.getElementById('base-map-img');
+        container.innerHTML = '';
+
+        // The image world_map_3d.jpg is roughly a Miller/Equirectangular projection.
+        // We need to map lat/lng to x/y percentages.
+        // Let's assume standard equirectangular bounds (-180 to 180, 90 to -90)
+        // With some slight visual offsets to fit the exact image boundaries.
+
+        this.countries.forEach(c => {
+            if (!c.latlng) return;
+
+            const lat = c.latlng[0];
+            const lng = c.latlng[1];
+
+            // Normalize coordinates
+            // Longitude: -180 to 180 maps to 0% to 100%
+            // The map image might be shifted horizontally. E.g. 0 longitude (Prime Meridian) is usually center
+            // Let's adjust based on the current flat_map.png logic from flyTo (-28 degrees)
+            let adjLng = lng + 180 - 28;
+            if (adjLng < 0) adjLng += 360;
+            if (adjLng > 360) adjLng -= 360;
+
+            const xPercent = (adjLng / 360) * 100;
+            // Latitude: 90 to -90 maps to 0% to 100%
+            const yPercent = ((90 - lat) / 180) * 100;
+
+            const pin = document.createElement('div');
+            pin.className = 'map-pin';
+            pin.style.left = `${xPercent}%`;
+            pin.style.top = `${yPercent}%`;
+
+            // Allow flying directly from map
+            pin.onclick = () => {
+                document.getElementById('world-map-modal').classList.add('hidden');
+                // Auto-fill computer if needed or just skip to flight
+                if (!document.getElementById('flight-modal').classList.contains('hidden')) {
+                    document.getElementById('flight-modal').classList.add('hidden');
+                }
+                this.flyTo(c);
+            };
+
+            const icon = document.createElement('div');
+            icon.className = 'pin-icon';
+            icon.textContent = '📍';
+
+            const label = document.createElement('div');
+            label.className = 'pin-label';
+            label.textContent = c.name[lang];
+
+            pin.appendChild(icon);
+            pin.appendChild(label);
+            container.appendChild(pin);
+        });
     },
 
     openFlightComputer() {
