@@ -550,34 +550,158 @@ main {
 
 /* Mobile Responsiveness */
 @media (max-width: 850px) {
-    main {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "customer"
-            "shelf"
-            "basket"
-            "cash"
-            "money"
-            "tray";
-        padding: 5px;
-        gap: 15px;
-        overflow-y: auto;
+    body.merchant-game {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .game-wrapper {
+        height: 100dvh;
+    }
+
+    header {
+        padding: 5px 10px;
     }
 
     header h1 {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
+    }
+
+    .stats {
+        font-size: 0.9rem;
+        gap: 10px;
+    }
+
+    .nav-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+    }
+
+    main {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "customer customer"
+            "shelf shelf"
+            "basket cash"
+            "money tray";
+        padding: 5px;
+        gap: 5px;
+        overflow: hidden;
     }
 
     #customer-avatar {
-        font-size: 80px;
+        font-size: 50px;
+        margin-bottom: 0px;
     }
 
     .customer-acc {
-        font-size: 65px;
+        font-size: 40px;
+    }
+
+    .speech-bubble {
+        padding: 5px 10px;
+        font-size: 0.8rem;
     }
 
     .shelf {
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 5px;
+        padding-bottom: 5px;
+        border-bottom-width: 5px;
+    }
+
+    .item img {
+        width: 35px;
+        height: 35px;
+    }
+
+    .item {
+        width: 45px;
+        padding: 4px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .item .price {
+        font-size: 0.7rem;
+        margin-top: 2px;
+    }
+
+    #shelf-area {
+        padding: 5px;
+        gap: 5px;
+    }
+
+    #basket-area {
+        min-height: 80px;
+        padding: 10px 5px 5px 5px;
+    }
+
+    .basket-item {
+        width: 25px;
+        height: 25px;
+    }
+
+    .area-label {
+        font-size: 0.6rem;
+        top: -8px;
+        padding: 2px 6px;
+    }
+
+    #cash-machine {
+        padding: 8px;
+    }
+
+    #register-screen {
+        min-height: 40px;
+        padding: 5px;
+        font-size: 0.8rem;
+        margin-bottom: 5px;
+    }
+
+    .action-btn {
+        padding: 5px;
+        font-size: 0.8rem;
+    }
+
+    .machine-buttons {
+        gap: 5px;
+    }
+
+    #change-tray {
+        min-height: 80px;
+        padding: 10px 5px 5px 5px;
+    }
+
+    .clear-btn {
+        font-size: 0.7rem;
+        padding: 2px 10px;
+    }
+
+    #money-drawer {
+        padding: 5px;
+        gap: 5px;
+    }
+
+    .bill {
+        width: 45px;
+        height: 25px;
+        font-size: 0.7rem;
+        line-height: 25px;
+        padding: 0;
+    }
+
+    .coin {
+        width: 30px;
+        height: 30px;
+        font-size: 0.7rem;
+        line-height: 30px;
+        padding: 0;
+    }
+
+    .currency-group {
+        gap: 5px;
     }
 }

@@ -436,6 +436,18 @@ body {
 
 /* Responsive constraints */
 @media (max-width: 600px) {
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+
+    #investigate-panel {
+        max-height: none;
+        overflow-y: visible;
+        margin-bottom: 20px;
+    }
+
     #inv-title {
         font-size: 1.8rem;
     }
