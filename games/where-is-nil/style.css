@@ -93,7 +93,7 @@ body {
     position: relative;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: flex-start;
     padding: 20px;
     /* Dotted world map overlay pattern */
     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 2px, transparent 2px);
@@ -107,6 +107,8 @@ body {
     padding: 25px;
     width: 100%;
     max-width: 600px;
+    max-height: 100%;
+    overflow-y: auto;
     backdrop-filter: blur(15px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     text-align: center;
