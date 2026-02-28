@@ -222,19 +222,35 @@ const Game = {
 
         // Apply a realistic country-specific AI generated image as background
         const prompt = `${this.currentCountry.name.en} landscape monument beautiful photography`;
-        const bgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
+        const bgUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
+        const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(this.currentCountry.name.en)}/600/400`;
 
         imgContainer.style.background = `linear-gradient(to bottom, #56CCF2, #2F80ED)`; // default while loading
 
         const bgImg = new Image();
+        let imageLoaded = false;
+
         bgImg.onload = () => {
+            imageLoaded = true;
             imgContainer.style.background = `url("${bgUrl}") center/cover no-repeat, linear-gradient(to bottom, #56CCF2, #2F80ED)`;
         };
         bgImg.onerror = () => {
-            // Revert back to continent if the AI image fails
-            console.warn("AI Image failed to load, falling back to gradient.");
-            imgContainer.style.background = `linear-gradient(to bottom, #56CCF2, #2F80ED)`;
+            if (!imageLoaded) {
+                imageLoaded = true;
+                console.warn("AI Image failed to load, falling back to abstract photo.");
+                imgContainer.style.background = `url("${fallbackUrl}") center/cover no-repeat, linear-gradient(to bottom, #56CCF2, #2F80ED)`;
+            }
         };
+
+        // Timeout to fallback if Pollinations is too slow
+        setTimeout(() => {
+            if (!imageLoaded) {
+                console.warn("AI Image load timed out, falling back to abstract photo.");
+                bgImg.src = ""; // Cancel load
+                imgContainer.style.background = `url("${fallbackUrl}") center/cover no-repeat, linear-gradient(to bottom, #56CCF2, #2F80ED)`;
+            }
+        }, 8000);
+
         bgImg.src = bgUrl;
 
         // Use FlagCDN for a reliable, instantly-loaded image of the country's flag
@@ -314,7 +330,7 @@ const Game = {
 
             const label = document.createElement('div');
             label.className = 'pin-label';
-            label.textContent = c.name[lang];
+            label.innerHTML = `<strong>${c.name[lang]}</strong><br><span style="color:#ffdd00; font-size: 0.8em;">★ ${c.capital[lang]}</span>`;
 
             pin.appendChild(icon);
             pin.appendChild(label);
