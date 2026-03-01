@@ -206,7 +206,7 @@ const Game = {
         document.getElementById('clues-container').appendChild(clueEl);
     },
 
-    loadDestinationImage() {
+    async loadDestinationImage() {
         const imgContainer = document.getElementById('dest-image-container');
         const imgEl = document.getElementById('dest-image');
         imgContainer.classList.remove('hidden');
@@ -222,12 +222,48 @@ const Game = {
         }
         spinner.style.display = 'block';
 
-        // Apply a realistic country-specific AI generated image as background
-        const prompt = `Famous iconic landmark monument in ${this.currentCountry.name.en}, photorealistic highly detailed tourism photography`;
-        const bgUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
-        const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(this.currentCountry.name.en)}/600/400`;
-
         imgContainer.style.background = `linear-gradient(to bottom, #56CCF2, #2F80ED)`; // default while loading
+
+        let bgUrl = null;
+
+        // 1. Try to fetch Wikipedia summary for the monument
+        const monumentName = this.currentCountry.monument.en.replace(/ /g, '_');
+        try {
+            const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(monumentName)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.originalimage && data.originalimage.source) {
+                    bgUrl = data.originalimage.source;
+                } else if (data.thumbnail && data.thumbnail.source) {
+                    // some articles only have thumbnails
+                    bgUrl = data.thumbnail.source;
+                }
+            }
+        } catch (e) {
+            console.warn("Wiki API failed for monument", e);
+        }
+
+        // 2. Fallback to capital if the monument lacks an image or fails
+        if (!bgUrl) {
+            const capitalName = this.currentCountry.capital.en.replace(/ /g, '_');
+            try {
+                const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(capitalName)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.originalimage && data.originalimage.source) {
+                        bgUrl = data.originalimage.source;
+                    }
+                }
+            } catch (e) { }
+        }
+
+        // 3. Final fallback to AI if Wikipedia yields nothing
+        if (!bgUrl) {
+            const prompt = `Famous iconic landmark monument in ${this.currentCountry.name.en}, photorealistic highly detailed tourism photography`;
+            bgUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
+        }
+
+        const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(this.currentCountry.name.en)}/600/400`;
 
         const bgImg = new Image();
         let imageLoaded = false;
@@ -239,15 +275,15 @@ const Game = {
         bgImg.onerror = () => {
             if (!imageLoaded) {
                 imageLoaded = true;
-                console.warn("AI Image failed to load, falling back to abstract photo.");
+                console.warn("Primary image failed to load, falling back to abstract photo.");
                 imgContainer.style.background = `url("${fallbackUrl}") center/cover no-repeat, linear-gradient(to bottom, #56CCF2, #2F80ED)`;
             }
         };
 
-        // Timeout to fallback if Pollinations is too slow
+        // Timeout to fallback if the final image load is too slow
         setTimeout(() => {
             if (!imageLoaded) {
-                console.warn("AI Image load timed out, falling back to abstract photo.");
+                console.warn("Image load timed out, falling back to abstract photo.");
                 bgImg.src = ""; // Cancel load
                 imgContainer.style.background = `url("${fallbackUrl}") center/cover no-repeat, linear-gradient(to bottom, #56CCF2, #2F80ED)`;
             }
