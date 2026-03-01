@@ -282,8 +282,8 @@ const Game = {
         document.getElementById('world-map-modal').classList.remove('hidden');
         if (!this.worldMapInstance) {
             this.worldMapInstance = L.map('world-leaflet-map').setView([20, 0], 2);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
             }).addTo(this.worldMapInstance);
             this.renderMapPins();
         }
@@ -357,8 +357,8 @@ const Game = {
                 scrollWheelZoom: false,
                 doubleClickZoom: false
             }).setView([20, 0], 2);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
             }).addTo(this.flightMapInstance);
         }
 
