@@ -99,6 +99,8 @@ const Game = {
     currentCountry: null,
     nextCountry: null,
     cluesFound: {},
+    worldMapInstance: null,
+    flightMapInstance: null,
 
     init() {
         if (window.NIL_COUNTRIES && window.NIL_COUNTRIES.length > 0) {
@@ -221,7 +223,7 @@ const Game = {
         spinner.style.display = 'block';
 
         // Apply a realistic country-specific AI generated image as background
-        const prompt = `${this.currentCountry.name.en} landscape monument beautiful photography`;
+        const prompt = `Famous iconic landmark monument in ${this.currentCountry.name.en}, photorealistic highly detailed tourism photography`;
         const bgUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=600&height=400&nologo=true`;
         const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(this.currentCountry.name.en)}/600/400`;
 
@@ -278,64 +280,41 @@ const Game = {
 
     openWorldMap() {
         document.getElementById('world-map-modal').classList.remove('hidden');
-        this.renderMapPins();
+        if (!this.worldMapInstance) {
+            this.worldMapInstance = L.map('world-leaflet-map').setView([20, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(this.worldMapInstance);
+            this.renderMapPins();
+        }
+        setTimeout(() => this.worldMapInstance.invalidateSize(), 100);
     },
 
     renderMapPins() {
-        const container = document.getElementById('map-pins-container');
-        const mapImg = document.getElementById('base-map-img');
-        container.innerHTML = '';
-
-        // The image world_map_3d.jpg is roughly a Miller/Equirectangular projection.
-        // We need to map lat/lng to x/y percentages.
-        // Let's assume standard equirectangular bounds (-180 to 180, 90 to -90)
-        // With some slight visual offsets to fit the exact image boundaries.
-
         this.countries.forEach(c => {
             if (!c.latlng) return;
 
-            const lat = c.latlng[0];
-            const lng = c.latlng[1];
+            const markerHtml = `<div class="custom-leaflet-icon">📍</div>`;
+            const customIcon = L.divIcon({
+                className: '',
+                html: markerHtml,
+                iconSize: [30, 30],
+                iconAnchor: [15, 30],
+                popupAnchor: [0, -30]
+            });
 
-            // Normalize coordinates
-            // Longitude: -180 to 180 maps to 0% to 100%
-            // The map image might be shifted horizontally. E.g. 0 longitude (Prime Meridian) is usually center
-            // Let's adjust based on the current flat_map.png logic from flyTo (-28 degrees)
-            let adjLng = lng + 180 - 28;
-            if (adjLng < 0) adjLng += 360;
-            if (adjLng > 360) adjLng -= 360;
+            const marker = L.marker([c.latlng[0], c.latlng[1]], { icon: customIcon }).addTo(this.worldMapInstance);
 
-            const xPercent = (adjLng / 360) * 100;
-            // Latitude: 90 to -90 maps to 0% to 100%
-            const yPercent = ((90 - lat) / 180) * 100;
+            const popupContent = `<strong>${c.name[lang]}</strong><br><span style="color:#ffdd00; font-size: 1em; text-shadow: 1px 1px 2px black;">★ ${c.capital[lang]}</span><br><br><button onclick="Game.flyFromMap('${c.id}')" style="background:var(--accent); color:black; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;" class="clue-btn">FLY HERE ✈️</button>`;
 
-            const pin = document.createElement('div');
-            pin.className = 'map-pin';
-            pin.style.left = `${xPercent}%`;
-            pin.style.top = `${yPercent}%`;
-
-            // Allow flying directly from map
-            pin.onclick = () => {
-                document.getElementById('world-map-modal').classList.add('hidden');
-                // Auto-fill computer if needed or just skip to flight
-                if (!document.getElementById('flight-modal').classList.contains('hidden')) {
-                    document.getElementById('flight-modal').classList.add('hidden');
-                }
-                this.flyTo(c);
-            };
-
-            const icon = document.createElement('div');
-            icon.className = 'pin-icon';
-            icon.textContent = '📍';
-
-            const label = document.createElement('div');
-            label.className = 'pin-label';
-            label.innerHTML = `<strong>${c.name[lang]}</strong><br><span style="color:#ffdd00; font-size: 0.8em;">★ ${c.capital[lang]}</span>`;
-
-            pin.appendChild(icon);
-            pin.appendChild(label);
-            container.appendChild(pin);
+            marker.bindPopup(popupContent);
         });
+    },
+
+    flyFromMap(countryId) {
+        document.getElementById('world-map-modal').classList.add('hidden');
+        const c = this.countries.find(x => x.id === countryId);
+        if (c) this.flyTo(c);
     },
 
     openFlightComputer() {
@@ -364,100 +343,74 @@ const Game = {
 
     flyTo(selectedCountry) {
         document.getElementById('flight-modal').classList.add('hidden');
+        if (!document.getElementById('world-map-modal').classList.contains('hidden')) {
+            document.getElementById('world-map-modal').classList.add('hidden');
+        }
 
         const overlay = document.getElementById('flight-animation-overlay');
         overlay.classList.remove('hidden');
 
-        requestAnimationFrame(() => {
-            const canvas = document.getElementById('flight-canvas');
-            const mapContainer = document.getElementById('map-container');
+        if (!this.flightMapInstance) {
+            this.flightMapInstance = L.map('flight-leaflet-map', {
+                zoomControl: false,
+                dragging: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false
+            }).setView([20, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(this.flightMapInstance);
+        }
 
-            canvas.width = mapContainer.clientWidth || 800;
-            canvas.height = mapContainer.clientHeight || 450;
-            const ctx = canvas.getContext('2d');
-
-            // Equirectangular mapping with offset for the specific map image layout
-            const mapLatLng = (lat, lng) => {
-                let adjLng = lng + 180 - 28; // -28 degree map shift
-                if (adjLng < 0) adjLng += 360;
-
-                const x = (adjLng / 360) * canvas.width;
-                const y = ((90 - lat) / 180) * canvas.height;
-                return { x, y };
-            };
+        setTimeout(() => {
+            this.flightMapInstance.invalidateSize();
 
             const sLatLng = this.currentCountry.latlng || [0, 0];
             const eLatLng = selectedCountry.latlng || [0, 0];
 
-            const start = mapLatLng(sLatLng[0], sLatLng[1]);
-            const end = mapLatLng(eLatLng[0], eLatLng[1]);
-
-            let startTime = null;
-            const duration = 2000;
-
-            const imgPlane = new Image();
-            // A simple plane icon SVG
-            imgPlane.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300F2FF"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
-
-            const drawLoop = (timestamp) => {
-                if (!startTime) startTime = timestamp;
-                const progress = Math.min((timestamp - startTime) / duration, 1);
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Draw start dot
-                ctx.beginPath();
-                ctx.arc(start.x, start.y, 6, 0, Math.PI * 2);
-                ctx.fillStyle = '#FF00E4';
-                ctx.fill();
-
-                // Trace straight path
-                ctx.beginPath();
-                ctx.setLineDash([5, 5]);
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = 'rgba(0, 242, 255, 0.5)';
-                ctx.moveTo(start.x, start.y);
-
-                // Linear interpolation
-                const curX = start.x + (end.x - start.x) * progress;
-                const curY = start.y + (end.y - start.y) * progress;
-
-                ctx.lineTo(curX, curY);
-                ctx.stroke();
-
-                // Plane rotation (constant angle for a straight line)
-                const angle = Math.atan2(end.y - start.y, end.x - start.x);
-
-                ctx.save();
-                ctx.translate(curX, curY);
-                ctx.rotate(angle + Math.PI / 4); // Plane icon natively points up-right
-                ctx.drawImage(imgPlane, -16, -16, 32, 32);
-                ctx.restore();
-
-                // Draw end dot if finished
-                if (progress === 1) {
-                    ctx.beginPath();
-                    ctx.arc(end.x, end.y, 8, 0, Math.PI * 2);
-                    ctx.fillStyle = '#00F2FF';
-                    ctx.fill();
+            // Clear previous layers (we just keep the tile layer)
+            this.flightMapInstance.eachLayer(layer => {
+                if (layer instanceof L.Polyline || layer instanceof L.Marker) {
+                    this.flightMapInstance.removeLayer(layer);
                 }
+            });
 
-                if (progress < 1) {
-                    requestAnimationFrame(drawLoop);
-                } else {
-                    setTimeout(() => {
-                        overlay.classList.add('hidden');
-                        this.handleArrival(selectedCountry);
-                    }, 600);
-                }
-            };
+            // Draw flight path
+            const flightPath = L.polyline([[sLatLng[0], sLatLng[1]], [eLatLng[0], eLatLng[1]]], {
+                color: '#00F2FF',
+                weight: 4,
+                dashArray: '10, 10'
+            }).addTo(this.flightMapInstance);
 
-            if (imgPlane.complete) {
-                requestAnimationFrame(drawLoop);
-            } else {
-                imgPlane.onload = () => requestAnimationFrame(drawLoop);
-            }
-        });
+            const planeHtml = `<div style="font-size: 2.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));">✈️</div>`;
+            const planeIcon = L.divIcon({
+                className: '',
+                html: planeHtml,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+
+            // Mark Start and End conceptually
+            L.marker([sLatLng[0], sLatLng[1]], { icon: planeIcon }).addTo(this.flightMapInstance);
+
+            const destHtml = `<div style="font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));">🎯</div>`;
+            const destIcon = L.divIcon({
+                className: '',
+                html: destHtml,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+            L.marker([eLatLng[0], eLatLng[1]], { icon: destIcon }).addTo(this.flightMapInstance);
+
+            // Animate map view to encompass the trip
+            this.flightMapInstance.fitBounds(flightPath.getBounds(), { padding: [50, 50], animate: true, duration: 2 });
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                this.handleArrival(selectedCountry);
+            }, 3000);
+
+        }, 100);
     },
 
     handleArrival(selectedCountry) {
