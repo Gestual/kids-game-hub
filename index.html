@@ -71,6 +71,15 @@
         <div id="difficulty-modal" class="hidden">
             <div class="modal-content">
                 <h2 data-i18n="select_difficulty">Select Difficulty</h2>
+                <!-- New pre-game language selector -->
+                <div style="margin-bottom: 20px;">
+                    <select id="modal-lang-select"
+                        style="font-family: inherit; font-size: 1.2rem; padding: 10px; border-radius: 10px; border: 2px solid var(--accent);">
+                        <option value="en">🇺🇸 English</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="es">🇪🇸 Español</option>
+                    </select>
+                </div>
                 <div class="difficulty-btns">
                     <button class="diff-btn easy" onclick="Hub.startGameWithDifficulty('easy')">Easy 😊</button>
                     <button class="diff-btn medium" onclick="Hub.startGameWithDifficulty('medium')">Medium 😎</button>

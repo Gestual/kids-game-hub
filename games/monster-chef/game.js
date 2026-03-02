@@ -16,8 +16,10 @@ const itemsList = [
     { id: 'mushroom', label: { en: 'mushroom', fr: 'champignon', es: 'champiñón' }, plural: { en: 'mushrooms', fr: 'champignons', es: 'champiñones' }, emoji: '🍄', category: 'magic' },
     { id: 'crystal', label: { en: 'crystal', fr: 'cristal', es: 'cristal' }, plural: { en: 'crystals', fr: 'cristaux', es: 'cristales' }, emoji: '💎', category: 'magic' },
     { id: 'potion', label: { en: 'potion', fr: 'potion', es: 'poción' }, plural: { en: 'potions', fr: 'potions', es: 'pociones' }, emoji: '🧪', category: 'magic' },
-    // Utensils
-    { id: 'spoon', label: { en: 'spoon', fr: 'cuillère', es: 'cuchara' }, plural: { en: 'spoons', fr: 'cuillères', es: 'cucharas' }, emoji: '🥄', category: 'utensil' }
+    // Utensils (with specific action verbs)
+    { id: 'spoon', label: { en: 'spoon', fr: 'cuillère', es: 'cuchara' }, plural: { en: 'spoons', fr: 'cuillères', es: 'cucharas' }, emoji: '🥄', category: 'utensil', verb: { en: 'MIX', fr: 'MÉLANGE', es: 'MEZCLA' } },
+    { id: 'whisk', label: { en: 'whisk', fr: 'fouet', es: 'batidor' }, plural: { en: 'whisks', fr: 'fouets', es: 'batidores' }, emoji: '🥣', category: 'utensil', verb: { en: 'WHIP', fr: 'FOUETTE', es: 'BATE' } },
+    { id: 'wand', label: { en: 'wand', fr: 'baguette', es: 'varita' }, plural: { en: 'wands', fr: 'baguettes', es: 'varitas' }, emoji: '🪄', category: 'utensil', verb: { en: 'CRUSH', fr: 'ÉCRASE', es: 'APLASTA' } }
 ];
 
 let currentRecipe = []; // Array of { item: itemObject, count: number }
@@ -103,25 +105,48 @@ function generateRecipe() {
 }
 
 function buildSentence() {
-    const parts = currentRecipe.map(req => {
+    const foodItems = currentRecipe.filter(req => req.item.category !== 'utensil');
+    const utensilItem = currentRecipe.find(req => req.item.category === 'utensil');
+
+    const foodParts = foodItems.map(req => {
         const name = req.requiredCount > 1 ? req.item.plural[currentLanguage] : req.item.label[currentLanguage];
-        // Enforce spacing and basic grammar 
         return `${req.requiredCount} ${name.toUpperCase()}`;
     });
 
     let sentence = "";
+
+    // Assemble the base request for ingredients
     if (currentLanguage === 'en') {
-        if (parts.length === 1) sentence = `I NEED ${parts[0]}.`;
-        else if (parts.length === 2) sentence = `I NEED ${parts[0]} AND ${parts[1]}.`;
-        else sentence = `I NEED ${parts[0]}, ${parts[1]}, AND ${parts[2]}.`;
+        if (foodParts.length === 1) sentence = `ADD ${foodParts[0]}`;
+        else if (foodParts.length === 2) sentence = `ADD ${foodParts[0]} AND ${foodParts[1]}`;
+        else sentence = `ADD ${foodParts[0]}, ${foodParts[1]}, AND ${foodParts[2]}`;
     } else if (currentLanguage === 'fr') {
-        if (parts.length === 1) sentence = `J'AI BESOIN DE ${parts[0]}.`;
-        else if (parts.length === 2) sentence = `J'AI BESOIN DE ${parts[0]} ET ${parts[1]}.`;
-        else sentence = `J'AI BESOIN DE ${parts[0]}, ${parts[1]} ET ${parts[2]}.`;
+        if (foodParts.length === 1) sentence = `AJOUTE ${foodParts[0]}`;
+        else if (foodParts.length === 2) sentence = `AJOUTE ${foodParts[0]} ET ${foodParts[1]}`;
+        else sentence = `AJOUTE ${foodParts[0]}, ${foodParts[1]} ET ${foodParts[2]}`;
     } else if (currentLanguage === 'es') {
-        if (parts.length === 1) sentence = `NECESITO ${parts[0]}.`;
-        else if (parts.length === 2) sentence = `NECESITO ${parts[0]} Y ${parts[1]}.`;
-        else sentence = `NECESITO ${parts[0]}, ${parts[1]} Y ${parts[2]}.`;
+        if (foodParts.length === 1) sentence = `AÑADE ${foodParts[0]}`;
+        else if (foodParts.length === 2) sentence = `AÑADE ${foodParts[0]} Y ${foodParts[1]}`;
+        else sentence = `AÑADE ${foodParts[0]}, ${foodParts[1]} Y ${foodParts[2]}`;
+    }
+
+    // Append the action verb if a utensil is required
+    if (utensilItem) {
+        const verb = utensilItem.item.verb[currentLanguage];
+        const toolName = utensilItem.item.label[currentLanguage].toUpperCase();
+
+        if (currentLanguage === 'en') {
+            sentence += ` AND ${verb} WITH A ${toolName}.`;
+        } else if (currentLanguage === 'fr') {
+            // French grammar depends slightly on tool gender, but we'll use a neutral construct or UN/UNE based on tool
+            const article = (toolName === 'CUILLÈRE' || toolName === 'BAGUETTE') ? 'UNE' : 'UN';
+            sentence += ` ET ${verb} AVEC ${article} ${toolName}.`;
+        } else if (currentLanguage === 'es') {
+            const article = (toolName === 'CUCHARA' || toolName === 'VARITA') ? 'UNA' : 'UN';
+            sentence += ` Y ${verb} CON ${article} ${toolName}.`;
+        }
+    } else {
+        sentence += "."; // Just close the sentence if no tool
     }
 
     const speechEl = document.getElementById('speech-text');

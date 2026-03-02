@@ -210,7 +210,7 @@ body {
     text-decoration: line-through;
 }
 
-/* Invisible Drop Zone Cauldron */
+/* Glowing Drop Zone Cauldron */
 .cauldron-zone {
     position: absolute;
     bottom: 10%;
@@ -218,7 +218,22 @@ body {
     width: 30%;
     height: 40%;
     z-index: 5;
-    /* border: 2px dashed green; For debugging */
+    border-radius: 50%;
+    border: 3px dashed rgba(255, 255, 255, 0.4);
+    box-shadow: inset 0 0 20px rgba(108, 92, 231, 0.4);
+    animation: glow-pulse 2s infinite alternate;
+}
+
+@keyframes glow-pulse {
+    0% {
+        box-shadow: inset 0 0 10px rgba(108, 92, 231, 0.2), 0 0 10px rgba(108, 92, 231, 0.2);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    100% {
+        box-shadow: inset 0 0 30px rgba(108, 92, 231, 0.8), 0 0 30px rgba(108, 92, 231, 0.6);
+        border-color: rgba(255, 255, 255, 0.8);
+    }
 }
 
 #feedback-overlay {

@@ -324,6 +324,11 @@ const Hub = {
         }
 
         this.state.pendingGameId = gameId;
+
+        // Sync modal language with hub language
+        const modalSelect = document.getElementById('modal-lang-select');
+        if (modalSelect) modalSelect.value = this.state.lang;
+
         document.getElementById('difficulty-modal').classList.remove('hidden');
     },
 
@@ -333,7 +338,16 @@ const Hub = {
         const iframe = document.getElementById('game-iframe');
 
         // Construct path to game
-        const gamePath = `games/${gameId.replace(/_/g, '-')}/index.html?diff=${diff}&lang=${this.state.lang}`;
+        const modalSelect = document.getElementById('modal-lang-select');
+        const runLang = modalSelect ? modalSelect.value : this.state.lang;
+        const gamePath = `games/${gameId.replace(/_/g, '-')}/index.html?diff=${diff}&lang=${runLang}`;
+
+        // Also update hub's global language if they changed it in the modal
+        if (runLang !== this.state.lang) {
+            this.state.lang = runLang;
+            this.renderHub();
+            this.updateUI('all');
+        }
         iframe.src = gamePath;
         container.classList.remove('hidden');
 
