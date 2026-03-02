@@ -5,22 +5,40 @@ let currentLanguage = 'en'; // default, will be overridden by Hub
 // The expanded items dictionary
 const itemsList = [
     // Fruits & Veggies
-    { id: 'apple', label: { en: 'apple', fr: 'pomme', es: 'manzana' }, plural: { en: 'apples', fr: 'pommes', es: 'manzanas' }, emoji: '🍎', category: 'food' },
-    { id: 'banana', label: { en: 'banana', fr: 'banane', es: 'plátano' }, plural: { en: 'bananas', fr: 'bananes', es: 'plátanos' }, emoji: '🍌', category: 'food' },
-    { id: 'grapes', label: { en: 'grapes', fr: 'raisin', es: 'uvas' }, plural: { en: 'grapes', fr: 'raisins', es: 'uvas' }, emoji: '🍇', category: 'food' },
-    { id: 'carrot', label: { en: 'carrot', fr: 'carotte', es: 'zanahoria' }, plural: { en: 'carrots', fr: 'carottes', es: 'zanahorias' }, emoji: '🥕', category: 'food' },
-    { id: 'broccoli', label: { en: 'broccoli', fr: 'brocoli', es: 'brócoli' }, plural: { en: 'broccoli', fr: 'brocolis', es: 'brócolis' }, emoji: '🥦', category: 'food' },
-    { id: 'strawberry', label: { en: 'strawberry', fr: 'fraise', es: 'fresa' }, plural: { en: 'strawberries', fr: 'fraises', es: 'fresas' }, emoji: '🍓', category: 'food' },
+    { id: 'apple', label: { en: 'apple', fr: 'pomme', es: 'manzana' }, plural: { en: 'apples', fr: 'pommes', es: 'manzanas' }, emoji: '🍎', category: 'food', gender: { fr: 'f', es: 'f' } },
+    { id: 'banana', label: { en: 'banana', fr: 'banane', es: 'plátano' }, plural: { en: 'bananas', fr: 'bananes', es: 'plátanos' }, emoji: '🍌', category: 'food', gender: { fr: 'f', es: 'm' } },
+    { id: 'grapes', label: { en: 'grape', fr: 'raisin', es: 'uva' }, plural: { en: 'grapes', fr: 'raisins', es: 'uvas' }, emoji: '🍇', category: 'food', gender: { fr: 'm', es: 'f' } },
+    { id: 'carrot', label: { en: 'carrot', fr: 'carotte', es: 'zanahoria' }, plural: { en: 'carrots', fr: 'carottes', es: 'zanahorias' }, emoji: '🥕', category: 'food', gender: { fr: 'f', es: 'f' } },
+    { id: 'broccoli', label: { en: 'broccoli', fr: 'brocoli', es: 'brócoli' }, plural: { en: 'broccoli', fr: 'brocolis', es: 'brócolis' }, emoji: '🥦', category: 'food', gender: { fr: 'm', es: 'm' } },
+    { id: 'strawberry', label: { en: 'strawberry', fr: 'fraise', es: 'fresa' }, plural: { en: 'strawberries', fr: 'fraises', es: 'fresas' }, emoji: '🍓', category: 'food', gender: { fr: 'f', es: 'f' } },
     // Magical/Other
-    { id: 'egg', label: { en: 'egg', fr: 'œuf', es: 'huevo' }, plural: { en: 'eggs', fr: 'œufs', es: 'huevos' }, emoji: '🥚', category: 'magic' },
-    { id: 'mushroom', label: { en: 'mushroom', fr: 'champignon', es: 'champiñón' }, plural: { en: 'mushrooms', fr: 'champignons', es: 'champiñones' }, emoji: '🍄', category: 'magic' },
-    { id: 'crystal', label: { en: 'crystal', fr: 'cristal', es: 'cristal' }, plural: { en: 'crystals', fr: 'cristaux', es: 'cristales' }, emoji: '💎', category: 'magic' },
-    { id: 'potion', label: { en: 'potion', fr: 'potion', es: 'poción' }, plural: { en: 'potions', fr: 'potions', es: 'pociones' }, emoji: '🧪', category: 'magic' },
+    { id: 'egg', label: { en: 'egg', fr: 'œuf', es: 'huevo' }, plural: { en: 'eggs', fr: 'œufs', es: 'huevos' }, emoji: '🥚', category: 'magic', gender: { fr: 'm', es: 'm' } },
+    { id: 'mushroom', label: { en: 'mushroom', fr: 'champignon', es: 'champiñón' }, plural: { en: 'mushrooms', fr: 'champignons', es: 'champiñones' }, emoji: '🍄', category: 'magic', gender: { fr: 'm', es: 'm' } },
+    { id: 'crystal', label: { en: 'crystal', fr: 'cristal', es: 'cristal' }, plural: { en: 'crystals', fr: 'cristaux', es: 'cristales' }, emoji: '💎', category: 'magic', gender: { fr: 'm', es: 'm' } },
+    { id: 'potion', label: { en: 'potion', fr: 'potion', es: 'poción' }, plural: { en: 'potions', fr: 'potions', es: 'pociones' }, emoji: '🧪', category: 'magic', gender: { fr: 'f', es: 'f' } },
     // Utensils (with specific action verbs)
-    { id: 'spoon', label: { en: 'spoon', fr: 'cuillère', es: 'cuchara' }, plural: { en: 'spoons', fr: 'cuillères', es: 'cucharas' }, emoji: '🥄', category: 'utensil', verb: { en: 'MIX', fr: 'MÉLANGE', es: 'MEZCLA' } },
-    { id: 'whisk', label: { en: 'whisk', fr: 'fouet', es: 'batidor' }, plural: { en: 'whisks', fr: 'fouets', es: 'batidores' }, emoji: '🥣', category: 'utensil', verb: { en: 'WHIP', fr: 'FOUETTE', es: 'BATE' } },
-    { id: 'wand', label: { en: 'wand', fr: 'baguette', es: 'varita' }, plural: { en: 'wands', fr: 'baguettes', es: 'varitas' }, emoji: '🪄', category: 'utensil', verb: { en: 'CRUSH', fr: 'ÉCRASE', es: 'APLASTA' } }
+    { id: 'spoon', label: { en: 'spoon', fr: 'cuillère', es: 'cuchara' }, plural: { en: 'spoons', fr: 'cuillères', es: 'cucharas' }, emoji: '🥄', category: 'utensil', verb: { en: 'MIX', fr: 'MÉLANGE', es: 'MEZCLA' }, gender: { fr: 'f', es: 'f' } },
+    { id: 'whisk', label: { en: 'whisk', fr: 'fouet', es: 'batidor' }, plural: { en: 'whisks', fr: 'fouets', es: 'batidores' }, emoji: '🥣', category: 'utensil', verb: { en: 'WHIP', fr: 'FOUETTE', es: 'BATE' }, gender: { fr: 'm', es: 'm' } },
+    { id: 'wand', label: { en: 'wand', fr: 'baguette', es: 'varita' }, plural: { en: 'wands', fr: 'baguettes', es: 'varitas' }, emoji: '🪄', category: 'utensil', verb: { en: 'CRUSH', fr: 'ÉCRASE', es: 'APLASTA' }, gender: { fr: 'f', es: 'f' } }
 ];
+
+const numberWords = {
+    en: { 1: 'ONE', 2: 'TWO', 3: 'THREE', 4: 'FOUR', 5: 'FIVE', 6: 'SIX', 7: 'SEVEN', 8: 'EIGHT', 9: 'NINE', 10: 'TEN' },
+    fr: {
+        m: { 1: 'UN', 2: 'DEUX', 3: 'TROIS', 4: 'QUATRE', 5: 'CINQ', 6: 'SIX', 7: 'SEPT', 8: 'HUIT', 9: 'NEUF', 10: 'DIX' },
+        f: { 1: 'UNE', 2: 'DEUX', 3: 'TROIS', 4: 'QUATRE', 5: 'CINQ', 6: 'SIX', 7: 'SEPT', 8: 'HUIT', 9: 'NEUF', 10: 'DIX' }
+    },
+    es: {
+        m: { 1: 'UN', 2: 'DOS', 3: 'TRES', 4: 'CUATRO', 5: 'CINCO', 6: 'SEIS', 7: 'SIETE', 8: 'OCHO', 9: 'NUEVE', 10: 'DIEZ' },
+        f: { 1: 'UNA', 2: 'DOS', 3: 'TRES', 4: 'CUATRO', 5: 'CINCO', 6: 'SEIS', 7: 'SIETE', 8: 'OCHO', 9: 'NUEVE', 10: 'DIEZ' }
+    }
+};
+
+function getNumberWord(num, lang, genderObj) {
+    if (lang === 'en') return numberWords.en[num] || num.toString();
+    const g = genderObj ? genderObj[lang] : 'm';
+    return numberWords[lang][g][num] || num.toString();
+}
 
 let currentRecipe = []; // Array of { item: itemObject, count: number }
 let cauldronContents = {}; // Map of id -> count
@@ -110,7 +128,8 @@ function buildSentence() {
 
     const foodParts = foodItems.map(req => {
         const name = req.requiredCount > 1 ? req.item.plural[currentLanguage] : req.item.label[currentLanguage];
-        return `${req.requiredCount} ${name.toUpperCase()}`;
+        const numWord = getNumberWord(req.requiredCount, currentLanguage, req.item.gender);
+        return `${numWord} ${name.toUpperCase()}`;
     });
 
     let sentence = "";
