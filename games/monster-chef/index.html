@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monster Chef - Kids Game Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles/hub-theme.css">
+    <link rel="stylesheet" href="style.css?v=1">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- Background Layer -->
+        <div id="background-layer"></div>
+
+        <!-- Headers & Navigation -->
+        <button class="hub-back-btn" onclick="HubAPI.close()">← BACK</button>
+        <div id="level-indicator">LEVEL: <span id="current-level">1</span></div>
+
+        <!-- Alien Character -->
+        <div id="alien-chef">
+            <div id="speech-bubble" class="hidden">
+                <p id="speech-text">I WANT AN APPLE, PLEASE.</p>
+            </div>
+        </div>
+
+        <!-- Foreground Counter -->
+        <div id="counter-layer"></div>
+
+        <!-- Conveyor Belt Area -->
+        <div id="conveyor-belt">
+            <div id="conveyor-track">
+                <!-- Items will be injected here -->
+            </div>
+        </div>
+
+        <!-- Fridge Area -->
+        <div id="fridge-area">
+            <div class="fridge-grid" id="fridge-grid">
+                <!-- Draggable food items go here -->
+            </div>
+        </div>
+
+        <!-- Drop Zone -->
+        <div id="drop-zone"></div>
+
+        <!-- Overlay Feedback -->
+        <div id="feedback-overlay" class="hidden">
+            <h1 id="feedback-text">YUMMY!</h1>
+        </div>
+    </div>
+
+    <!-- Hub API integration -->
+    <script>
+        const HubAPI = {
+            addXP(amount) {
+                if (window.parent && window.parent.Hub) {
+                    window.parent.postMessage({ type: 'addXP', amount: amount }, '*');
+                }
+            },
+            close() {
+                if (window.parent && window.parent.Hub) {
+                    window.parent.postMessage({ type: 'closeGame' }, '*');
+                } else {
+                    console.log("Close game requested");
+                }
+            }
+        };
+    </script>
+    <script src="game.js?v=1"></script>
+</body>
+
+</html>

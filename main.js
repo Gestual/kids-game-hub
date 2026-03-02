@@ -92,7 +92,8 @@ const Hub = {
                 crack_the_code: "Crack the Code",
                 pixel_art: "Pixel Art Color",
                 little_merchant: "Little Merchant",
-                where_is_nil: "Where is Nil?"
+                where_is_nil: "Where is Nil?",
+                monster_chef: "Monster Chef"
             },
             admin: "Parent Panel 🔒",
             personalize_title: "Personalize"
@@ -119,7 +120,8 @@ const Hub = {
                 crack_the_code: "Crack the Code",
                 pixel_art: "Pixel Art",
                 little_merchant: "La Marchande",
-                where_is_nil: "Où est Nil ?"
+                where_is_nil: "Où est Nil ?",
+                monster_chef: "Chef Monstre"
             },
             admin: "Espace Parents 🔒",
             select_difficulty: "Choisir la difficulté",
@@ -147,7 +149,8 @@ const Hub = {
                 crack_the_code: "Descifrar el Código",
                 pixel_art: "Pixel Art",
                 little_merchant: "La Tiendita",
-                where_is_nil: "¿Dónde está Nil?"
+                where_is_nil: "¿Dónde está Nil?",
+                monster_chef: "Chef Monstruo"
             },
             admin: "Panel de Padres 🔒",
             select_difficulty: "Elegir Dificultad",
@@ -165,7 +168,8 @@ const Hub = {
         { id: 'crack_the_code', icon: '🔐', color: '#6BCB77' },
         { id: 'pixel_art', icon: '🎨', color: '#FFD93D' },
         { id: 'little_merchant', icon: '🛒', color: '#FF9800' },
-        { id: 'where_is_nil', icon: '🌍', color: '#00F2FF' }
+        { id: 'where_is_nil', icon: '🌍', color: '#00F2FF' },
+        { id: 'monster_chef', icon: '👨‍🍳', color: '#e84393' }
     ],
 
     init() {
