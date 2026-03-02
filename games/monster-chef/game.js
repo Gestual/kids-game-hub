@@ -273,7 +273,8 @@ dropZone.addEventListener('drop', (e) => {
 
 // --- Touch Mobile Drag & Drop ---
 let dragEl = null;
-let startX, startY, initialX, initialY;
+let cloneEl = null;
+let startX, startY;
 
 function handleTouch(e) {
     const touch = e.touches[0] || e.changedTouches[0];
@@ -281,23 +282,47 @@ function handleTouch(e) {
     if (e.type === 'touchstart') {
         dragEl = e.target;
         dragEl.classList.add('dragging');
-        startX = touch.clientX;
-        startY = touch.clientY;
-        initialX = dragEl.style.transform;
 
-        // Disable page scroll
-        e.preventDefault();
+        // Create an absolute clone for visually correct dragging over other elements
+        cloneEl = dragEl.cloneNode(true);
+        cloneEl.style.position = 'fixed';
+        cloneEl.style.zIndex = '9999';
+        cloneEl.style.margin = '0';
+        cloneEl.style.pointerEvents = 'none'; // Crucial so touchmove doesn't hit the clone
+
+        const rect = dragEl.getBoundingClientRect();
+        cloneEl.style.width = rect.width + 'px';
+        cloneEl.style.height = rect.height + 'px';
+        cloneEl.style.left = rect.left + 'px';
+        cloneEl.style.top = rect.top + 'px';
+
+        startX = touch.clientX - rect.left;
+        startY = touch.clientY - rect.top;
+
+        document.body.appendChild(cloneEl);
+
+        // Prevent page scroll
+        if (e.cancelable) e.preventDefault();
+
     } else if (e.type === 'touchmove') {
-        e.preventDefault();
-        const deltaX = touch.clientX - startX;
-        const deltaY = touch.clientY - startY;
-        dragEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.1)`;
+        if (e.cancelable) e.preventDefault(); // Stop scrolling while dragging
+
+        if (cloneEl) {
+            cloneEl.style.left = (touch.clientX - startX) + 'px';
+            cloneEl.style.top = (touch.clientY - startY) + 'px';
+            cloneEl.style.transform = `scale(1.1)`;
+        }
+
     } else if (e.type === 'touchend') {
         if (!dragEl) return;
         dragEl.classList.remove('dragging');
-        dragEl.style.transform = initialX || ''; // reset position
 
-        // Check if dropped in drop zone
+        if (cloneEl) {
+            cloneEl.remove();
+            cloneEl = null;
+        }
+
+        // Check if dropped in drop zone relative to viewport
         const dropRect = dropZone.getBoundingClientRect();
         if (touch.clientX >= dropRect.left && touch.clientX <= dropRect.right &&
             touch.clientY >= dropRect.top && touch.clientY <= dropRect.bottom) {

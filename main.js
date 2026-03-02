@@ -93,7 +93,7 @@ const Hub = {
                 pixel_art: "Pixel Art Color",
                 little_merchant: "Little Merchant",
                 where_is_nil: "Where is Nil?",
-                monster_chef: "Monster Chef"
+                monster_chef: "Magic Cauldron"
             },
             admin: "Parent Panel 🔒",
             personalize_title: "Personalize"
@@ -121,7 +121,7 @@ const Hub = {
                 pixel_art: "Pixel Art",
                 little_merchant: "La Marchande",
                 where_is_nil: "Où est Nil ?",
-                monster_chef: "Chef Monstre"
+                monster_chef: "Chaudron Magique"
             },
             admin: "Espace Parents 🔒",
             select_difficulty: "Choisir la difficulté",
@@ -150,7 +150,7 @@ const Hub = {
                 pixel_art: "Pixel Art",
                 little_merchant: "La Tiendita",
                 where_is_nil: "¿Dónde está Nil?",
-                monster_chef: "Chef Monstruo"
+                monster_chef: "Caldero Mágico"
             },
             admin: "Panel de Padres 🔒",
             select_difficulty: "Elegir Dificultad",
