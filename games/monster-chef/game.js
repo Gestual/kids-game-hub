@@ -1,20 +1,58 @@
 let level = 1;
-const maxLevels = 5;
+const maxLevels = 10;
+let currentLanguage = 'en'; // default, will be overridden by Hub
 
-// The items available in the game
+// The expanded items dictionary
 const itemsList = [
-    { id: 'apple', label: 'APPLE', emoji: '🍎' },
-    { id: 'banana', label: 'BANANA', emoji: '🍌' },
-    { id: 'grapes', label: 'GRAPES', emoji: '🍇' },
-    { id: 'cheese', label: 'CHEESE', emoji: '🧀' },
-    { id: 'chicken', label: 'CHICKEN', emoji: '🍗' },
-    { id: 'cake', label: 'CAKE', emoji: '🍰' }
+    // Fruits & Veggies
+    { id: 'apple', label: { en: 'apple', fr: 'pomme', es: 'manzana' }, plural: { en: 'apples', fr: 'pommes', es: 'manzanas' }, emoji: '🍎', category: 'food' },
+    { id: 'banana', label: { en: 'banana', fr: 'banane', es: 'plátano' }, plural: { en: 'bananas', fr: 'bananes', es: 'plátanos' }, emoji: '🍌', category: 'food' },
+    { id: 'grapes', label: { en: 'grapes', fr: 'raisin', es: 'uvas' }, plural: { en: 'grapes', fr: 'raisins', es: 'uvas' }, emoji: '🍇', category: 'food' },
+    { id: 'carrot', label: { en: 'carrot', fr: 'carotte', es: 'zanahoria' }, plural: { en: 'carrots', fr: 'carottes', es: 'zanahorias' }, emoji: '🥕', category: 'food' },
+    { id: 'broccoli', label: { en: 'broccoli', fr: 'brocoli', es: 'brócoli' }, plural: { en: 'broccoli', fr: 'brocolis', es: 'brócolis' }, emoji: '🥦', category: 'food' },
+    { id: 'strawberry', label: { en: 'strawberry', fr: 'fraise', es: 'fresa' }, plural: { en: 'strawberries', fr: 'fraises', es: 'fresas' }, emoji: '🍓', category: 'food' },
+    // Magical/Other
+    { id: 'egg', label: { en: 'egg', fr: 'œuf', es: 'huevo' }, plural: { en: 'eggs', fr: 'œufs', es: 'huevos' }, emoji: '🥚', category: 'magic' },
+    { id: 'mushroom', label: { en: 'mushroom', fr: 'champignon', es: 'champiñón' }, plural: { en: 'mushrooms', fr: 'champignons', es: 'champiñones' }, emoji: '🍄', category: 'magic' },
+    { id: 'crystal', label: { en: 'crystal', fr: 'cristal', es: 'cristal' }, plural: { en: 'crystals', fr: 'cristaux', es: 'cristales' }, emoji: '💎', category: 'magic' },
+    { id: 'potion', label: { en: 'potion', fr: 'potion', es: 'poción' }, plural: { en: 'potions', fr: 'potions', es: 'pociones' }, emoji: '🧪', category: 'magic' },
+    // Utensils
+    { id: 'spoon', label: { en: 'spoon', fr: 'cuillère', es: 'cuchara' }, plural: { en: 'spoons', fr: 'cuillères', es: 'cucharas' }, emoji: '🥄', category: 'utensil' }
 ];
 
-let targetItem = null;
+let currentRecipe = []; // Array of { item: itemObject, count: number }
+let cauldronContents = {}; // Map of id -> count
+
+// Speech synthesis helper
+function speak(text, langCode) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel(); // Interrupt previous speech
+    const msg = new SpeechSynthesisUtterance(text);
+
+    // Map internal lang codes to BCP 47
+    const langMap = { 'en': 'en-US', 'fr': 'fr-FR', 'es': 'es-ES' };
+    msg.lang = langMap[langCode] || 'en-US';
+    msg.rate = 0.9; // Slightly slower for kids
+    window.speechSynthesis.speak(msg);
+}
+
+// Hub Integration
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'languageChanged') {
+        currentLanguage = event.data.language;
+        // Optionally re-translate current UI state here
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
-    initGame();
+    // Attempt to grab language from URL params immediately (Hub convention)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('lang')) {
+        currentLanguage = urlParams.get('lang');
+    }
+
+    // Slight delay to ensure fonts/layout load before generating first speech
+    setTimeout(initGame, 500);
 });
 
 function initGame() {
@@ -23,42 +61,115 @@ function initGame() {
 
 function setupLevel() {
     document.getElementById('current-level').textContent = level;
+    cauldronContents = {}; // clear cauldron
 
-    // Pick a random item for the alien to request
-    targetItem = itemsList[Math.floor(Math.random() * itemsList.length)];
-
-    // Update speech bubble
-    const speechEl = document.getElementById('speech-text');
-    speechEl.textContent = `I WANT ${targetItem.label.match(/^[AEIOU]/) ? 'AN' : 'A'} ${targetItem.label}, PLEASE.`;
-    document.getElementById('speech-bubble').classList.remove('hidden');
-
-    populateFridgeAndConveyor();
+    generateRecipe();
+    updateRecipeUI();
+    populatePantry();
     setupDragAndDrop();
+
+    // Speak the request
+    const speechEl = document.getElementById('speech-text');
+    speak(speechEl.textContent, currentLanguage);
 }
 
-function populateFridgeAndConveyor() {
-    const fridge = document.getElementById('fridge-grid');
-    const conveyor = document.getElementById('conveyor-track');
+function generateRecipe() {
+    currentRecipe = [];
+    let numIngredients = 1;
+    let maxQuantityPerItem = 1;
+    let requireUtensil = false;
 
-    fridge.innerHTML = '';
-    conveyor.innerHTML = '';
+    // Difficulty scaling
+    if (level === 2) { maxQuantityPerItem = 3; }
+    if (level === 3) { numIngredients = 2; maxQuantityPerItem = 2; }
+    if (level >= 4) { numIngredients = 2; maxQuantityPerItem = 3; requireUtensil = true; }
+    if (level >= 6) { numIngredients = 3; maxQuantityPerItem = 4; requireUtensil = true; }
 
-    // Shuffle items
-    const shuffled = [...itemsList].sort(() => 0.5 - Math.random());
+    const availableFoods = itemsList.filter(i => i.category !== 'utensil');
+    const shuffledFoods = [...availableFoods].sort(() => 0.5 - Math.random());
 
-    // Put 4 in fridge, 2 on conveyor
-    for (let i = 0; i < 4; i++) {
-        fridge.appendChild(createDraggable(shuffled[i]));
+    for (let i = 0; i < numIngredients; i++) {
+        const count = Math.floor(Math.random() * maxQuantityPerItem) + 1;
+        currentRecipe.push({ item: shuffledFoods[i], requiredCount: count });
     }
 
-    for (let i = 4; i < 6; i++) {
-        conveyor.appendChild(createDraggable(shuffled[i]));
+    if (requireUtensil) {
+        const utensils = itemsList.filter(i => i.category === 'utensil');
+        const randomUtensil = utensils[Math.floor(Math.random() * utensils.length)];
+        currentRecipe.push({ item: randomUtensil, requiredCount: 1 });
     }
 
-    // Pad conveyor to loop nicely (duplicate items)
-    for (let i = 4; i < 6; i++) {
-        conveyor.appendChild(createDraggable(shuffled[i]));
+    buildSentence();
+}
+
+function buildSentence() {
+    const parts = currentRecipe.map(req => {
+        const name = req.requiredCount > 1 ? req.item.plural[currentLanguage] : req.item.label[currentLanguage];
+        // Enforce spacing and basic grammar 
+        return `${req.requiredCount} ${name.toUpperCase()}`;
+    });
+
+    let sentence = "";
+    if (currentLanguage === 'en') {
+        if (parts.length === 1) sentence = `I NEED ${parts[0]}.`;
+        else if (parts.length === 2) sentence = `I NEED ${parts[0]} AND ${parts[1]}.`;
+        else sentence = `I NEED ${parts[0]}, ${parts[1]}, AND ${parts[2]}.`;
+    } else if (currentLanguage === 'fr') {
+        if (parts.length === 1) sentence = `J'AI BESOIN DE ${parts[0]}.`;
+        else if (parts.length === 2) sentence = `J'AI BESOIN DE ${parts[0]} ET ${parts[1]}.`;
+        else sentence = `J'AI BESOIN DE ${parts[0]}, ${parts[1]} ET ${parts[2]}.`;
+    } else if (currentLanguage === 'es') {
+        if (parts.length === 1) sentence = `NECESITO ${parts[0]}.`;
+        else if (parts.length === 2) sentence = `NECESITO ${parts[0]} Y ${parts[1]}.`;
+        else sentence = `NECESITO ${parts[0]}, ${parts[1]} Y ${parts[2]}.`;
     }
+
+    const speechEl = document.getElementById('speech-text');
+    speechEl.textContent = sentence;
+    document.getElementById('speech-bubble').classList.remove('hidden');
+}
+
+function updateRecipeUI() {
+    const tracker = document.getElementById('recipe-tracker');
+    tracker.innerHTML = '';
+    tracker.classList.remove('hidden');
+
+    currentRecipe.forEach(req => {
+        const currentCount = cauldronContents[req.item.id] || 0;
+        const el = document.createElement('div');
+        el.className = `recipe-goal ${currentCount >= req.requiredCount ? 'checked' : ''}`;
+        el.innerHTML = `${req.item.emoji} ${currentCount}/${req.requiredCount}`;
+        tracker.appendChild(el);
+    });
+}
+
+function populatePantry() {
+    const pantry = document.getElementById('pantry-grid');
+    pantry.innerHTML = '';
+
+    // We must include all items necessary for the recipe
+    let requiredItemsSet = new Set(currentRecipe.map(r => r.item.id));
+
+    // Add some random distractors to fill a 3x3 grid (9 items total)
+    let availableList = [...itemsList];
+    let slotsToFill = 9 - requiredItemsSet.size;
+
+    let itemsToDisplay = currentRecipe.map(r => r.item);
+
+    for (let i = 0; i < availableList.length; i++) {
+        if (slotsToFill <= 0) break;
+        if (!requiredItemsSet.has(availableList[i].id)) {
+            itemsToDisplay.push(availableList[i]);
+            slotsToFill--;
+        }
+    }
+
+    // Shuffle the display
+    itemsToDisplay.sort(() => 0.5 - Math.random());
+
+    itemsToDisplay.forEach(itemData => {
+        pantry.appendChild(createDraggable(itemData));
+    });
 }
 
 function createDraggable(itemData) {
@@ -67,6 +178,14 @@ function createDraggable(itemData) {
     el.textContent = itemData.emoji;
     el.dataset.id = itemData.id;
     el.setAttribute('draggable', true);
+
+    // Prevent default touch actions like scoll while grabbing
+    el.style.touchAction = 'none';
+
+    // Tap to speak
+    el.addEventListener('pointerdown', () => {
+        speak(itemData.label[currentLanguage], currentLanguage);
+    });
 
     // Touch events for mobile
     ['touchstart', 'touchmove', 'touchend'].forEach(evt => {
@@ -118,7 +237,6 @@ function handleTouch(e) {
     if (e.type === 'touchstart') {
         dragEl = e.target;
         dragEl.classList.add('dragging');
-        const rect = dragEl.getBoundingClientRect();
         startX = touch.clientX;
         startY = touch.clientY;
         initialX = dragEl.style.transform;
@@ -131,6 +249,7 @@ function handleTouch(e) {
         const deltaY = touch.clientY - startY;
         dragEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.1)`;
     } else if (e.type === 'touchend') {
+        if (!dragEl) return;
         dragEl.classList.remove('dragging');
         dragEl.style.transform = initialX || ''; // reset position
 
@@ -145,20 +264,49 @@ function handleTouch(e) {
 }
 
 function handleItemDropped(itemId) {
-    if (itemId === targetItem.id) {
-        success();
+    // Check if this item is part of the recipe
+    const recipeRequirement = currentRecipe.find(r => r.item.id === itemId);
+
+    const currentCount = cauldronContents[itemId] || 0;
+
+    if (recipeRequirement && currentCount < recipeRequirement.requiredCount) {
+        // Correct item dropped!
+        cauldronContents[itemId] = currentCount + 1;
+        updateRecipeUI();
+        speak("Pop!", currentLanguage); // Little feedback sound
+
+        checkWinCondition();
     } else {
+        // Redundant or wrong item
         failure();
     }
 }
 
+function checkWinCondition() {
+    let allMet = true;
+    currentRecipe.forEach(req => {
+        if ((cauldronContents[req.item.id] || 0) < req.requiredCount) {
+            allMet = false;
+        }
+    });
+
+    if (allMet) {
+        success();
+    }
+}
+
 function success() {
-    HubAPI.addXP(10);
+    HubAPI.addXP(15); // more xp for complex recipes
     const overlay = document.getElementById('feedback-overlay');
     const text = document.getElementById('feedback-text');
+
     text.textContent = 'YUMMY!';
+    if (currentLanguage === 'fr') text.textContent = 'MIAM !';
+    if (currentLanguage === 'es') text.textContent = '¡QUÉ RICO!';
+
     text.style.color = '#2ed573';
     overlay.classList.remove('hidden');
+    speak(text.textContent, currentLanguage);
 
     setTimeout(() => {
         overlay.classList.add('hidden');
@@ -168,13 +316,14 @@ function success() {
         } else {
             setupLevel();
         }
-    }, 1500);
+    }, 2000);
 }
 
 function failure() {
     const overlay = document.getElementById('feedback-overlay');
     const text = document.getElementById('feedback-text');
-    text.textContent = 'YUCK!';
+
+    text.textContent = 'OOPS!';
     text.style.color = '#ff4757';
     overlay.classList.remove('hidden');
 
@@ -185,8 +334,13 @@ function failure() {
 
 function winGame() {
     const text = document.getElementById('speech-text');
-    text.innerHTML = 'IM FULL! <br> YOU WIN! 🏆';
-    document.getElementById('fridge-grid').innerHTML = '';
-    document.getElementById('conveyor-track').innerHTML = '';
-    setTimeout(() => HubAPI.close(), 3000);
+    let winMsg = 'IM FULL! <br> YOU WIN! 🏆';
+    if (currentLanguage === 'fr') winMsg = "JE N'AI PLUS FAIM ! <br> GAGNÉ ! 🏆";
+    if (currentLanguage === 'es') winMsg = "¡ESTOY LLENO! <br> ¡GANASTE! 🏆";
+
+    text.innerHTML = winMsg;
+    speak("You win!", currentLanguage);
+
+    document.getElementById('pantry-grid').innerHTML = '';
+    setTimeout(() => HubAPI.close(), 4000);
 }

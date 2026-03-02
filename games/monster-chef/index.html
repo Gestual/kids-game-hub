@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monster Chef - Kids Game Hub</title>
+    <title>Potion Maker - Kids Game Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles/hub-theme.css">
     <link rel="stylesheet" href="style.css?v=1">
@@ -19,32 +19,27 @@
         <button class="hub-back-btn" onclick="HubAPI.close()">← BACK</button>
         <div id="level-indicator">LEVEL: <span id="current-level">1</span></div>
 
-        <!-- Alien Character -->
-        <div id="alien-chef">
+        <!-- Fairy/Witch Character -->
+        <div id="potion-maker">
             <div id="speech-bubble" class="hidden">
-                <p id="speech-text">I WANT AN APPLE, PLEASE.</p>
+                <p id="speech-text">I NEED 2 APPLES.</p>
             </div>
+            <!-- Recipe Progress UI -->
+            <div id="recipe-tracker" class="hidden"></div>
         </div>
 
         <!-- Foreground Counter -->
         <div id="counter-layer"></div>
 
-        <!-- Conveyor Belt Area -->
-        <div id="conveyor-belt">
-            <div id="conveyor-track">
-                <!-- Items will be injected here -->
+        <!-- Pantry Area (Replaces Fridge/Conveyor) -->
+        <div id="pantry-area">
+            <div class="pantry-grid" id="pantry-grid">
+                <!-- Draggable ingredients go here -->
             </div>
         </div>
 
-        <!-- Fridge Area -->
-        <div id="fridge-area">
-            <div class="fridge-grid" id="fridge-grid">
-                <!-- Draggable food items go here -->
-            </div>
-        </div>
-
-        <!-- Drop Zone -->
-        <div id="drop-zone"></div>
+        <!-- Cauldron Drop Zone -->
+        <div id="drop-zone" class="cauldron-zone"></div>
 
         <!-- Overlay Feedback -->
         <div id="feedback-overlay" class="hidden">
