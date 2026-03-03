@@ -43,18 +43,64 @@ function getNumberWord(num, lang, genderObj) {
 let currentRecipe = []; // Array of { item: itemObject, count: number }
 let cauldronContents = {}; // Map of id -> count
 
+let currentAudio = null;
+
+// Ensure voices are loaded for fallback
+if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+}
+
 // Speech synthesis helper
 function speak(text, langCode) {
+    // Stop any ongoing audio
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+
+    // Google Translate TTS URL
+    const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${langCode}&q=${encodeURIComponent(text)}`;
+
+    currentAudio = new Audio(url);
+    currentAudio.play().catch(e => {
+        console.warn("Google TTS failed or offline, falling back to local synthesis.", e);
+        fallbackSpeak(text, langCode);
+    });
+}
+
+function fallbackSpeak(text, langCode) {
     if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel(); // Interrupt previous speech
     const msg = new SpeechSynthesisUtterance(text);
 
     // Map internal lang codes to BCP 47
     const langMap = { 'en': 'en-US', 'fr': 'fr-FR', 'es': 'es-ES' };
     msg.lang = langMap[langCode] || 'en-US';
     msg.rate = 0.9; // Slightly slower for kids
+
+    const voices = window.speechSynthesis.getVoices();
+    const targetLang = msg.lang.toLowerCase();
+
+    // Try to find a female voice using common known female voice names across platforms
+    let femaleVoice = voices.find(v =>
+        v.lang.toLowerCase().startsWith(targetLang) &&
+        (v.name.toLowerCase().includes('female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Amelie') || v.name.includes('Monica') || v.name.includes('Google UK English Female') || v.name.includes('Google US English'))
+    );
+
+    // If no explicit female found, just pick the first matching language
+    if (!femaleVoice) {
+        femaleVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang));
+    }
+
+    if (femaleVoice) {
+        msg.voice = femaleVoice;
+    }
+
     window.speechSynthesis.speak(msg);
 }
+
 
 // Hub Integration
 window.addEventListener('message', (event) => {
