@@ -5,21 +5,21 @@ let currentLanguage = 'en'; // default, will be overridden by Hub
 // The expanded items dictionary
 const itemsList = [
     // Fruits & Veggies
-    { id: 'apple', label: { en: 'apple', fr: 'pomme', es: 'manzana' }, plural: { en: 'apples', fr: 'pommes', es: 'manzanas' }, emoji: '🍎', category: 'food', gender: { fr: 'f', es: 'f' } },
-    { id: 'banana', label: { en: 'banana', fr: 'banane', es: 'plátano' }, plural: { en: 'bananas', fr: 'bananes', es: 'plátanos' }, emoji: '🍌', category: 'food', gender: { fr: 'f', es: 'm' } },
-    { id: 'grapes', label: { en: 'grape', fr: 'raisin', es: 'uva' }, plural: { en: 'grapes', fr: 'raisins', es: 'uvas' }, emoji: '🍇', category: 'food', gender: { fr: 'm', es: 'f' } },
-    { id: 'carrot', label: { en: 'carrot', fr: 'carotte', es: 'zanahoria' }, plural: { en: 'carrots', fr: 'carottes', es: 'zanahorias' }, emoji: '🥕', category: 'food', gender: { fr: 'f', es: 'f' } },
-    { id: 'broccoli', label: { en: 'broccoli', fr: 'brocoli', es: 'brócoli' }, plural: { en: 'broccoli', fr: 'brocolis', es: 'brócolis' }, emoji: '🥦', category: 'food', gender: { fr: 'm', es: 'm' } },
-    { id: 'strawberry', label: { en: 'strawberry', fr: 'fraise', es: 'fresa' }, plural: { en: 'strawberries', fr: 'fraises', es: 'fresas' }, emoji: '🍓', category: 'food', gender: { fr: 'f', es: 'f' } },
+    { id: 'apple', label: { en: 'apple', fr: 'pomme', es: 'manzana' }, plural: { en: 'apples', fr: 'pommes', es: 'manzanas' }, category: 'food', gender: { fr: 'f', es: 'f' } },
+    { id: 'banana', label: { en: 'banana', fr: 'banane', es: 'plátano' }, plural: { en: 'bananas', fr: 'bananes', es: 'plátanos' }, category: 'food', gender: { fr: 'f', es: 'm' } },
+    { id: 'grapes', label: { en: 'grape', fr: 'raisin', es: 'uva' }, plural: { en: 'grapes', fr: 'raisins', es: 'uvas' }, category: 'food', gender: { fr: 'm', es: 'f' } },
+    { id: 'carrot', label: { en: 'carrot', fr: 'carotte', es: 'zanahoria' }, plural: { en: 'carrots', fr: 'carottes', es: 'zanahorias' }, category: 'food', gender: { fr: 'f', es: 'f' } },
+    { id: 'broccoli', label: { en: 'broccoli', fr: 'brocoli', es: 'brócoli' }, plural: { en: 'broccoli', fr: 'brocolis', es: 'brócolis' }, category: 'food', gender: { fr: 'm', es: 'm' } },
+    { id: 'strawberry', label: { en: 'strawberry', fr: 'fraise', es: 'fresa' }, plural: { en: 'strawberries', fr: 'fraises', es: 'fresas' }, category: 'food', gender: { fr: 'f', es: 'f' } },
     // Magical/Other
-    { id: 'egg', label: { en: 'egg', fr: 'œuf', es: 'huevo' }, plural: { en: 'eggs', fr: 'œufs', es: 'huevos' }, emoji: '🥚', category: 'magic', gender: { fr: 'm', es: 'm' } },
-    { id: 'mushroom', label: { en: 'mushroom', fr: 'champignon', es: 'champiñón' }, plural: { en: 'mushrooms', fr: 'champignons', es: 'champiñones' }, emoji: '🍄', category: 'magic', gender: { fr: 'm', es: 'm' } },
-    { id: 'crystal', label: { en: 'crystal', fr: 'cristal', es: 'cristal' }, plural: { en: 'crystals', fr: 'cristaux', es: 'cristales' }, emoji: '💎', category: 'magic', gender: { fr: 'm', es: 'm' } },
-    { id: 'potion', label: { en: 'potion', fr: 'potion', es: 'poción' }, plural: { en: 'potions', fr: 'potions', es: 'pociones' }, emoji: '🧪', category: 'magic', gender: { fr: 'f', es: 'f' } },
+    { id: 'egg', label: { en: 'egg', fr: 'œuf', es: 'huevo' }, plural: { en: 'eggs', fr: 'œufs', es: 'huevos' }, category: 'magic', gender: { fr: 'm', es: 'm' } },
+    { id: 'mushroom', label: { en: 'mushroom', fr: 'champignon', es: 'champiñón' }, plural: { en: 'mushrooms', fr: 'champignons', es: 'champiñones' }, category: 'magic', gender: { fr: 'm', es: 'm' } },
+    { id: 'crystal', label: { en: 'crystal', fr: 'cristal', es: 'cristal' }, plural: { en: 'crystals', fr: 'cristaux', es: 'cristales' }, category: 'magic', gender: { fr: 'm', es: 'm' } },
+    { id: 'potion', label: { en: 'potion', fr: 'potion', es: 'poción' }, plural: { en: 'potions', fr: 'potions', es: 'pociones' }, category: 'magic', gender: { fr: 'f', es: 'f' } },
     // Utensils (with specific action verbs)
-    { id: 'spoon', label: { en: 'spoon', fr: 'cuillère', es: 'cuchara' }, plural: { en: 'spoons', fr: 'cuillères', es: 'cucharas' }, emoji: '🥄', category: 'utensil', verb: { en: 'MIX', fr: 'MÉLANGE', es: 'MEZCLA' }, gender: { fr: 'f', es: 'f' } },
-    { id: 'whisk', label: { en: 'whisk', fr: 'fouet', es: 'batidor' }, plural: { en: 'whisks', fr: 'fouets', es: 'batidores' }, emoji: '🥣', category: 'utensil', verb: { en: 'WHIP', fr: 'FOUETTE', es: 'BATE' }, gender: { fr: 'm', es: 'm' } },
-    { id: 'wand', label: { en: 'wand', fr: 'baguette', es: 'varita' }, plural: { en: 'wands', fr: 'baguettes', es: 'varitas' }, emoji: '🪄', category: 'utensil', verb: { en: 'CRUSH', fr: 'ÉCRASE', es: 'APLASTA' }, gender: { fr: 'f', es: 'f' } }
+    { id: 'spoon', label: { en: 'spoon', fr: 'cuillère', es: 'cuchara' }, plural: { en: 'spoons', fr: 'cuillères', es: 'cucharas' }, category: 'utensil', verb: { en: 'MIX', fr: 'MÉLANGE', es: 'MEZCLA' }, gender: { fr: 'f', es: 'f' } },
+    { id: 'whisk', label: { en: 'whisk', fr: 'fouet', es: 'batidor' }, plural: { en: 'whisks', fr: 'fouets', es: 'batidores' }, category: 'utensil', verb: { en: 'WHIP', fr: 'FOUETTE', es: 'BATE' }, gender: { fr: 'm', es: 'm' } },
+    { id: 'wand', label: { en: 'wand', fr: 'baguette', es: 'varita' }, plural: { en: 'wands', fr: 'baguettes', es: 'varitas' }, category: 'utensil', verb: { en: 'CRUSH', fr: 'ÉCRASE', es: 'APLASTA' }, gender: { fr: 'f', es: 'f' } }
 ];
 
 const numberWords = {
@@ -182,7 +182,7 @@ function updateRecipeUI() {
         const currentCount = cauldronContents[req.item.id] || 0;
         const el = document.createElement('div');
         el.className = `recipe-goal ${currentCount >= req.requiredCount ? 'checked' : ''}`;
-        el.innerHTML = `${req.item.emoji} ${currentCount}/${req.requiredCount}`;
+        el.innerHTML = `<img src="assets/items/${req.item.id}.png" draggable="false"> ${currentCount}/${req.requiredCount}`;
         tracker.appendChild(el);
     });
 }
@@ -219,7 +219,12 @@ function populatePantry() {
 function createDraggable(itemData) {
     const el = document.createElement('div');
     el.className = 'draggable-item';
-    el.textContent = itemData.emoji;
+
+    const img = document.createElement('img');
+    img.src = `assets/items/${itemData.id}.png`;
+    img.draggable = false; // we handle drag on the container
+    el.appendChild(img);
+
     el.dataset.id = itemData.id;
     el.setAttribute('draggable', true);
 
