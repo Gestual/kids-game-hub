@@ -9,6 +9,7 @@ const Hub = {
         lastPlayTime: Date.now(),
         continuousPlayMinutes: 0,
         isResting: false,
+        restUntil: 0,
         currentBackground: 'forest',
         unlockedBackgrounds: ['forest'],
         unlockedCards: ['warrior'],
@@ -93,7 +94,8 @@ const Hub = {
                 pixel_art: "Pixel Art Color",
                 little_merchant: "Little Merchant",
                 where_is_nil: "Where is Nil?",
-                monster_chef: "Magic Cauldron"
+                monster_chef: "Magic Cauldron",
+                target_sum: "Target Sum"
             },
             admin: "Parent Panel 🔒",
             personalize_title: "Personalize"
@@ -121,7 +123,8 @@ const Hub = {
                 pixel_art: "Pixel Art",
                 little_merchant: "La Marchande",
                 where_is_nil: "Où est Nil ?",
-                monster_chef: "Chaudron Magique"
+                monster_chef: "Chaudron Magique",
+                target_sum: "Le Compte Est Bon"
             },
             admin: "Espace Parents 🔒",
             select_difficulty: "Choisir la difficulté",
@@ -150,7 +153,8 @@ const Hub = {
                 pixel_art: "Pixel Art",
                 little_merchant: "La Tiendita",
                 where_is_nil: "¿Dónde está Nil?",
-                monster_chef: "Caldero Mágico"
+                monster_chef: "Caldero Mágico",
+                target_sum: "Suma Objetivo"
             },
             admin: "Panel de Padres 🔒",
             select_difficulty: "Elegir Dificultad",
@@ -169,7 +173,8 @@ const Hub = {
         { id: 'pixel_art', icon: '🎨', color: '#FFD93D' },
         { id: 'little_merchant', icon: '🛒', color: '#FF9800' },
         { id: 'where_is_nil', icon: '🌍', color: '#00F2FF' },
-        { id: 'monster_chef', icon: '👨‍🍳', color: '#e84393' }
+        { id: 'monster_chef', icon: '👨‍🍳', color: '#e84393' },
+        { id: 'target_sum', icon: '🎯', color: '#6c5ce7' }
     ],
 
     init() {
@@ -177,6 +182,7 @@ const Hub = {
         this.detectLanguage();
         this.renderHub();
         this.applyBackground();
+        this.checkAndResumeRest();
         this.startTimers();
         this.setupEventListeners();
         this.setupMessageListener();
@@ -633,6 +639,30 @@ const Hub = {
         }
     },
 
+    checkAndResumeRest() {
+        const isDisabled = localStorage.getItem('admin_disable_timer') === 'true';
+        if (isDisabled) {
+            this.state.isResting = false;
+            this.state.continuousPlayMinutes = 0;
+            this.state.restUntil = 0;
+            this.saveState();
+            return;
+        }
+
+        if (this.state.isResting) {
+            const now = Date.now();
+            if (this.state.restUntil && now < this.state.restUntil) {
+                const remaining = Math.ceil((this.state.restUntil - now) / 1000);
+                this.triggerRestSession(remaining);
+            } else {
+                this.state.isResting = false;
+                this.state.continuousPlayMinutes = 0;
+                this.state.restUntil = 0;
+                this.saveState();
+            }
+        }
+    },
+
     startTimers() {
         setInterval(() => {
             if (this.state.energy < 5) {
@@ -643,35 +673,75 @@ const Hub = {
         }, 60000);
 
         setInterval(() => {
-            if (!this.state.isResting) {
-                if (localStorage.getItem('admin_disable_timer') !== 'true') {
-                    this.state.continuousPlayMinutes++;
-                    if (this.state.continuousPlayMinutes >= 20) {
-                        this.triggerRestSession();
-                    }
-                } else {
-                    this.state.continuousPlayMinutes = 0; // Keep it zeroed if disabled
+            if (localStorage.getItem('admin_disable_timer') === 'true') {
+                if (this.state.isResting || this.state.continuousPlayMinutes > 0) {
+                    this.state.isResting = false;
+                    this.state.continuousPlayMinutes = 0;
+                    this.state.restUntil = 0;
+                    const restScreen = document.getElementById('rest-message');
+                    if (restScreen) restScreen.classList.add('hidden');
+                    this.saveState();
                 }
+                return;
+            }
+
+            if (!this.state.isResting) {
+                this.state.continuousPlayMinutes++;
+                if (this.state.continuousPlayMinutes >= 20) {
+                    this.triggerRestSession();
+                }
+                this.saveState();
             }
         }, 60000);
     },
 
-    triggerRestSession() {
+    triggerRestSession(timeLeft = 300) {
         this.state.isResting = true;
+        
+        const now = Date.now();
+        if (!this.state.restUntil || this.state.restUntil <= now) {
+            this.state.restUntil = now + (timeLeft * 1000);
+        }
+        this.saveState();
+
         const restScreen = document.getElementById('rest-message');
         const timerEl = document.getElementById('break-timer');
-        restScreen.classList.remove('hidden');
-        let timeLeft = 300;
-        const interval = setInterval(() => {
-            timeLeft--;
+        if (restScreen) restScreen.classList.remove('hidden');
+
+        if (this.restInterval) {
+            clearInterval(this.restInterval);
+        }
+
+        const updateTimerDisplay = () => {
             const mins = Math.floor(timeLeft / 60);
             const secs = timeLeft % 60;
-            timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            if (timeLeft <= 0) {
-                clearInterval(interval);
+            if (timerEl) {
+                timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        };
+
+        updateTimerDisplay();
+
+        this.restInterval = setInterval(() => {
+            if (localStorage.getItem('admin_disable_timer') === 'true') {
+                clearInterval(this.restInterval);
                 this.state.isResting = false;
                 this.state.continuousPlayMinutes = 0;
-                restScreen.classList.add('hidden');
+                this.state.restUntil = 0;
+                if (restScreen) restScreen.classList.add('hidden');
+                this.saveState();
+                return;
+            }
+
+            timeLeft--;
+            updateTimerDisplay();
+
+            if (timeLeft <= 0) {
+                clearInterval(this.restInterval);
+                this.state.isResting = false;
+                this.state.continuousPlayMinutes = 0;
+                this.state.restUntil = 0;
+                if (restScreen) restScreen.classList.add('hidden');
                 this.saveState();
             }
         }, 1000);

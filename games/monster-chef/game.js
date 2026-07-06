@@ -117,6 +117,15 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLanguage = urlParams.get('lang');
     }
 
+    const potionMaker = document.getElementById('potion-maker');
+    potionMaker.style.cursor = 'pointer';
+    potionMaker.addEventListener('pointerdown', () => {
+        const textContent = document.getElementById('speech-text').textContent;
+        if (textContent) {
+            speak(textContent, currentLanguage);
+        }
+    });
+
     // Slight delay to ensure fonts/layout load before generating first speech
     setTimeout(initGame, 500);
 });

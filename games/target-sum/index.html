@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+    <title>Le Compte Est Bon - Target Sum</title>
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #6c5ce7;
+            --accent-glow: rgba(108, 92, 231, 0.4);
+            --yellow: #FFD93D;
+            --yellow-glow: rgba(255, 217, 61, 0.4);
+            --green: #6BCB77;
+            --green-glow: rgba(107, 203, 119, 0.4);
+            --danger: #FF6B6B;
+            --text-dark: #2F3E46;
+            --glass-bg: rgba(25, 30, 48, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.12);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(rgba(10, 12, 18, 0.65), rgba(10, 12, 18, 0.65)), url('assets/math_background.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #ffffff;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Timer and Pause Styles */
+        .hud-item.timer {
+            min-width: 80px;
+            justify-content: center;
+        }
+
+        .hud-item.timer.warning {
+            color: var(--danger);
+            animation: flash 1s infinite alternate;
+        }
+
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.4; }
+        }
+
+        .btn-pause {
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-pause:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Pause Overlay */
+        .pause-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 12, 18, 0.96);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            gap: 20px;
+        }
+
+        .pause-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .pause-title {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 3.5rem;
+            color: var(--yellow);
+            text-shadow: 0 0 15px var(--yellow-glow);
+            letter-spacing: 2px;
+        }
+
+        .btn-resume {
+            background: linear-gradient(135deg, #6c5ce7, #5b4cc4);
+            color: white;
+            padding: 15px 45px;
+            border-radius: 18px;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.4rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.1s ease;
+        }
+
+        .btn-resume:active {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Container & Scroll */
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            padding: 20px;
+            gap: 15px;
+            position: relative;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* UI Header */
+        .hud-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            align-items: center;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .hud-item {
+            background: var(--glass-bg);
+            padding: 8px 16px;
+            border-radius: 15px;
+            border: 2px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Big Target Card */
+        .target-card {
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 20px;
+            width: 90%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .target-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #a0a5c0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .target-bubble {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFE066, #F5A623);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 3.2rem;
+            color: #1a1a24;
+            box-shadow: 0 0 25px var(--yellow-glow);
+            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.3);
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 20px var(--yellow-glow); }
+            50% { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 217, 61, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 0 20px var(--yellow-glow); }
+        }
+
+        /* Workspace Equation Box */
+        .workspace-card {
+            background: rgba(15, 20, 32, 0.85);
+            border: 2px solid var(--accent);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            min-height: 110px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 0 20px var(--accent-glow);
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .equation-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            min-height: 50px;
+            width: 100%;
+        }
+
+        .placeholder-text {
+            color: #64748b;
+            font-size: 1rem;
+            font-style: italic;
+            width: 100%;
+            text-align: center;
+            padding-top: 12px;
+        }
+
+        .workspace-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 8px;
+            font-size: 0.95rem;
+        }
+
+        .calc-result {
+            font-weight: 900;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .calc-result.valid {
+            color: var(--green);
+            text-shadow: 0 0 10px var(--green-glow);
+        }
+
+        .calc-result.invalid {
+            color: #64748b;
+        }
+
+        .calc-result.exact {
+            color: var(--yellow);
+            text-shadow: 0 0 15px var(--yellow-glow);
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-4px); }
+        }
+
+        /* Blocks Styles */
+        .block {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            cursor: pointer;
+            box-sizing: border-box;
+            transition: all 0.12s ease;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+        }
+
+        .block:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Block sizes/colors */
+        .number-block {
+            font-size: 1.25rem;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4D96FF, #005FFF);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            min-width: 48px;
+        }
+
+        .operator-block {
+            font-size: 1.3rem;
+            padding: 8px 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #FF6B6B, #E03E3E);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            min-width: 44px;
+        }
+
+        .parenthesis-block {
+            font-size: 1.2rem;
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #9b59b6, #732d91);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            min-width: 38px;
+        }
+
+        /* Blocks inside equation space */
+        .eq-item {
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: none;
+            cursor: default;
+        }
+        .eq-item:active {
+            transform: none;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Number selections dock */
+        .selection-panel {
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 18px;
+            width: 90%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+        }
+
+        .panel-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #a0a5c0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .numbers-row, .operators-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .number-block.used {
+            opacity: 0.25;
+            transform: scale(0.9);
+            box-shadow: none;
+            pointer-events: none;
+            border-color: transparent;
+        }
+
+        /* Buttons control panel */
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            width: 90%;
+            max-width: 450px;
+            margin-top: 5px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 10px;
+            border-radius: 14px;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #747d8c, #2f3542);
+            color: white;
+        }
+
+        .btn-undo {
+            background: linear-gradient(135deg, #ffa502, #ff7f50);
+            color: white;
+        }
+
+        .btn-hint {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+            color: #1a1a24;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            flex: 1.5;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 0 rgba(46, 204, 113, 0.3), 0 4px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Solution Hint Panel */
+        .hint-card {
+            background: rgba(241, 196, 15, 0.15);
+            border: 2px dashed #f1c40f;
+            border-radius: 18px;
+            padding: 12px 16px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            display: none;
+            box-sizing: border-box;
+            animation: slideDown 0.3s ease;
+        }
+
+        .hint-text {
+            color: #f39c12;
+            font-weight: 700;
+            font-size: 1rem;
+            word-break: break-all;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Success Overlay Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 12, 18, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent);
+            border-radius: 28px;
+            padding: 30px;
+            width: 85%;
+            max-width: 400px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 15px 40px rgba(108, 92, 231, 0.3);
+            transform: scale(0.85);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-sizing: border-box;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 2.2rem;
+            color: var(--yellow);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-body {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: #e2e8f0;
+        }
+
+        .reward-info {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--green);
+            background: rgba(46, 204, 113, 0.1);
+            padding: 8px 20px;
+            border-radius: 12px;
+            margin: 10px 0;
+            border: 1px solid rgba(46, 204, 113, 0.2);
+        }
+
+        .modal-btn {
+            background: linear-gradient(135deg, #6c5ce7, #5b4cc4);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 15px;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.2rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            width: 100%;
+        }
+
+        .modal-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .instructions {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #a0a5c0;
+            max-width: 450px;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Pause Overlay -->
+    <div class="pause-overlay" id="pause-overlay">
+        <div class="pause-title" id="lbl-pause-title">PAUSED</div>
+        <button class="btn-resume" id="btn-resume" onclick="togglePause()">▶️ Resume</button>
+    </div>
+
+    <div class="game-wrapper">
+        <!-- HUD Info Row -->
+        <div class="hud-row">
+            <div class="hud-item" id="diff-badge">---</div>
+            <div class="hud-item timer" id="timer-badge">⏱️ --s</div>
+            <button class="btn-pause" id="btn-pause" onclick="togglePause()">⏸️</button>
+            <div class="hud-item" id="score-badge">🏆 0</div>
+        </div>
+
+        <!-- Target Bubble -->
+        <div class="target-card">
+            <div class="target-label" id="lbl-target">Target</div>
+            <div class="target-bubble" id="target-value">?</div>
+            <div class="instructions" id="lbl-instructions">Build an equation matching the target!</div>
+        </div>
+
+        <!-- Workspace Area -->
+        <div class="workspace-card">
+            <div class="equation-area" id="equation-area">
+                <span class="placeholder-text" id="lbl-placeholder">Click blocks below to build...</span>
+            </div>
+            <div class="workspace-status">
+                <span id="lbl-status">Status</span>
+                <span class="calc-result invalid" id="calc-result">= 0</span>
+            </div>
+        </div>
+
+        <!-- Hint Card -->
+        <div class="hint-card" id="hint-card">
+            <div class="hint-text" id="hint-text">Hint: </div>
+        </div>
+
+        <!-- Number & Operator Blocks Dock -->
+        <div class="selection-panel">
+            <div>
+                <div class="panel-label" id="lbl-numbers">Numbers (Use once)</div>
+                <div class="numbers-row" id="numbers-row">
+                    <!-- Dynamic Numbers -->
+                </div>
+            </div>
+            <div>
+                <div class="panel-label" id="lbl-operators">Operators</div>
+                <div class="operators-row">
+                    <div class="block operator-block" onclick="addOperator('+')">+</div>
+                    <div class="block operator-block" onclick="addOperator('−')">−</div>
+                    <div class="block operator-block" onclick="addOperator('×')">×</div>
+                    <div class="block operator-block" id="op-div" onclick="addOperator('÷')">÷</div>
+                    <div class="block parenthesis-block" onclick="addParenthesis('(')">(</div>
+                    <div class="block parenthesis-block" onclick="addParenthesis(')')">)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="controls-row">
+            <button class="btn btn-clear" id="btn-clear" onclick="clearWorkspace()">Clear</button>
+            <button class="btn btn-undo" id="btn-undo" onclick="undoLast()">Undo</button>
+            <button class="btn btn-hint" id="btn-hint" onclick="showHint()">Hint</button>
+            <button class="btn btn-submit" id="btn-submit" onclick="submitResult()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-title">Solved!</div>
+            <div class="modal-body" id="modal-body">Perfect calculation.</div>
+            <div class="reward-info" id="modal-reward">+50 XP</div>
+            <button class="modal-btn" id="modal-btn-next" onclick="nextRound()">Next Puzzle</button>
+        </div>
+    </div>
+
+    <script>
+        // Synthesizer Audio
+        const Sound = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playClick() {
+                this.init();
+                if (!this.ctx) return;
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.frequency.setValueAtTime(550, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(750, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            },
+            playUndo() {
+                this.init();
+                if (!this.ctx) return;
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(280, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            },
+            playSuccess() {
+                this.init();
+                if (!this.ctx) return;
+                let now = this.ctx.currentTime;
+                let playNote = (freq, delay, dur) => {
+                    let osc = this.ctx.createOscillator();
+                    let gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.frequency.setValueAtTime(freq, now + delay);
+                    gain.gain.setValueAtTime(0.08, now + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + delay + dur);
+                    osc.start(now + delay);
+                    osc.stop(now + delay + dur);
+                };
+                playNote(523.25, 0, 0.1); // C5
+                playNote(659.25, 0.08, 0.1); // E5
+                playNote(783.99, 0.16, 0.1); // G5
+                playNote(1046.50, 0.24, 0.2); // C6
+            },
+            playFail() {
+                this.init();
+                if (!this.ctx) return;
+                let now = this.ctx.currentTime;
+                let playNote = (freq, delay, dur) => {
+                    let osc = this.ctx.createOscillator();
+                    let gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + delay);
+                    gain.gain.setValueAtTime(0.1, now + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + delay + dur);
+                    osc.start(now + delay);
+                    osc.stop(now + delay + dur);
+                };
+                playNote(180, 0, 0.12);
+                playNote(140, 0.08, 0.15);
+            }
+        };
+
+        // Confetti Generator
+        const Confetti = {
+            canvas: null,
+            ctx: null,
+            particles: [],
+            active: false,
+            init(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+            },
+            start() {
+                this.active = true;
+                this.particles = [];
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                for (let i = 0; i < 90; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height - this.canvas.height,
+                        r: Math.random() * 5 + 4,
+                        color: `hsl(${Math.random() * 360}, 100%, 65%)`,
+                        tilt: Math.random() * 8 - 4,
+                        tiltAngleIncremental: Math.random() * 0.06 + 0.02,
+                        tiltAngle: 0,
+                        vx: Math.random() * 3 - 1.5,
+                        vy: Math.random() * 2.5 + 2.5
+                    });
+                }
+                this.loop();
+            },
+            stop() {
+                this.active = false;
+                if (this.ctx) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            },
+            loop() {
+                if (!this.active) return;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                let finished = true;
+
+                for (let i = 0; i < this.particles.length; i++) {
+                    let p = this.particles[i];
+                    p.tiltAngle += p.tiltAngleIncremental;
+                    p.y += p.vy;
+                    p.x += p.vx;
+                    p.tilt = Math.sin(p.tiltAngle) * 12;
+
+                    if (p.y < this.canvas.height) {
+                        finished = false;
+                    }
+
+                    this.ctx.beginPath();
+                    this.ctx.lineWidth = p.r;
+                    this.ctx.strokeStyle = p.color;
+                    this.ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                    this.ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                    this.ctx.stroke();
+                }
+
+                if (!finished) {
+                    requestAnimationFrame(() => this.loop());
+                } else {
+                    this.active = false;
+                }
+            }
+        };
+
+        // URL Parameters & State
+        const urlParams = new URLSearchParams(window.location.search);
+        const difficulty = urlParams.get('diff') || 'easy';
+        let lang = urlParams.get('lang') || 'en';
+
+        // Translation dictionary
+        const translations = {
+            en: {
+                title: "Target Sum",
+                lbl_target: "Target",
+                lbl_instructions: "Tap number and operator blocks to reach the target!",
+                lbl_placeholder: "Tap blocks below to build your expression...",
+                lbl_status: "Calculated",
+                lbl_numbers: "Numbers (Use each once)",
+                lbl_operators: "Operators",
+                btn_clear: "Clear",
+                btn_undo: "Undo",
+                btn_hint: "Hint",
+                btn_submit: "Submit",
+                msg_invalid: "Building...",
+                msg_div_zero: "Cannot divide by zero",
+                msg_negative: "Negative step not allowed",
+                msg_fraction: "Decimal result not allowed",
+                solved_perfect: "Exact Match! 🌟",
+                solved_close: "Close Match! 👍",
+                solved_far: "Nice Try! Check math.",
+                msg_perfect_desc: "You hit the target exactly!",
+                msg_close_desc: "Off by only {diff} units. Great logic!",
+                msg_far_desc: "Off by {diff} units. Let's practice!",
+                reward: "You earned: {coins} coins and {xp} XP!",
+                btn_next: "Next Puzzle",
+                solution_is: "Solution: ",
+                solution_close: "Best Solution (diff {diff}): ",
+                diff_easy: "Easy 😊",
+                diff_medium: "Medium 😎",
+                diff_hard: "Hard 🦁",
+                time_up: "Time's Up! ⏰",
+                time_up_desc: "The clock ran out! Try another puzzle.",
+                btn_retry: "Try Again",
+                lbl_paused: "PAUSED",
+                btn_resume: "▶️ Resume"
+            },
+            fr: {
+                title: "Le Compte Est Bon",
+                lbl_target: "Cible",
+                lbl_instructions: "Appuyez sur les nombres et les opérateurs pour atteindre la cible !",
+                lbl_placeholder: "Appuyez sur les blocs pour écrire la formule...",
+                lbl_status: "Calculé",
+                lbl_numbers: "Nombres (Usage unique)",
+                lbl_operators: "Opérateurs",
+                btn_clear: "Effacer",
+                btn_undo: "Retour",
+                btn_hint: "Solution",
+                btn_submit: "Valider",
+                msg_invalid: "Calcul...",
+                msg_div_zero: "Division par zéro impossible",
+                msg_negative: "Résultat intermédiaire négatif interdit",
+                msg_fraction: "Division fractionnaire interdite",
+                solved_perfect: "Le Compte Est Bon ! 🌟",
+                solved_close: "Tout Proche ! 👍",
+                solved_far: "Pas mal ! Essaie encore.",
+                msg_perfect_desc: "Vous avez trouvé le compte exact !",
+                msg_close_desc: "Écart de seulement {diff} unité(s). Bravo !",
+                msg_far_desc: "Écart de {diff} unité(s). Essaye de te rapprocher !",
+                reward: "Gagné : {coins} pièces et {xp} XP !",
+                btn_next: "Suivant",
+                solution_is: "Solution : ",
+                solution_close: "Meilleure Solution (écart {diff}) : ",
+                diff_easy: "Facile 😊",
+                diff_medium: "Moyen 😎",
+                diff_hard: "Difficile 🦁",
+                time_up: "Temps Écoulé ! ⏰",
+                time_up_desc: "Le temps est écoulé ! Essaie un autre calcul.",
+                btn_retry: "Réessayer",
+                lbl_paused: "PAUSE",
+                btn_resume: "▶️ Reprendre"
+            },
+            es: {
+                title: "Suma Objetivo",
+                lbl_target: "Objetivo",
+                lbl_instructions: "¡Toca los números y operadores para llegar al objetivo!",
+                lbl_placeholder: "Toca los bloques para construir tu fórmula...",
+                lbl_status: "Calculado",
+                lbl_numbers: "Números (Usa una vez)",
+                lbl_operators: "Operadores",
+                btn_clear: "Limpiar",
+                btn_undo: "Deshacer",
+                btn_hint: "Pista",
+                btn_submit: "Enviar",
+                msg_invalid: "Calculando...",
+                msg_div_zero: "No se puede dividir por cero",
+                msg_negative: "Resultado negativo intermedio prohibido",
+                msg_fraction: "Resultado decimal intermedio prohibido",
+                solved_perfect: "¡Exacto! 🌟",
+                solved_close: "¡Muy Cerca! 👍",
+                solved_far: "¡Buen intento!",
+                msg_perfect_desc: "¡Alcanzaste el objetivo exacto!",
+                msg_close_desc: "Diferencia de solo {diff} unidad(es). ¡Buen cálculo!",
+                msg_far_desc: "Diferencia de {diff} unidad(es). ¡Sigue intentando!",
+                reward: "¡Ganaste {coins} monedas y {xp} XP!",
+                btn_next: "Siguiente",
+                solution_is: "Solución: ",
+                solution_close: "Mejor solución (diff {diff}): ",
+                diff_easy: "Fácil 😊",
+                diff_medium: "Medio 😎",
+                diff_hard: "Difícil 🦁",
+                time_up: "¡Tiempo Agotado! ⏰",
+                time_up_desc: "¡Se acabó el tiempo! Intenta otro rompecabezas.",
+                btn_retry: "Reintentar",
+                lbl_paused: "PAUSADO",
+                btn_resume: "▶️ Reanudar"
+            }
+        };
+
+        const t = translations[lang] || translations.en;
+
+        // Apply translations to layout
+        document.getElementById('lbl-target').textContent = t.lbl_target;
+        document.getElementById('lbl-instructions').textContent = t.lbl_instructions;
+        document.getElementById('lbl-placeholder').textContent = t.lbl_placeholder;
+        document.getElementById('lbl-status').textContent = t.lbl_status;
+        document.getElementById('lbl-numbers').textContent = t.lbl_numbers;
+        document.getElementById('lbl-operators').textContent = t.lbl_operators;
+        document.getElementById('btn-clear').textContent = t.btn_clear;
+        document.getElementById('btn-undo').textContent = t.btn_undo;
+        document.getElementById('btn-hint').textContent = t.btn_hint;
+        document.getElementById('btn-submit').textContent = t.btn_submit;
+        document.getElementById('modal-btn-next').textContent = t.btn_next;
+        document.getElementById('lbl-pause-title').textContent = t.lbl_paused;
+        document.getElementById('btn-resume').textContent = t.btn_resume;
+
+        // Set difficulty badge
+        const diffLabels = { easy: t.diff_easy, medium: t.diff_medium, hard: t.diff_hard };
+        document.getElementById('diff-badge').textContent = diffLabels[difficulty] || difficulty;
+
+        // Game state variables
+        let targetVal = 0;
+        let numbers = [];
+        let expressionTokens = []; // Array of {type: 'number'|'operator'|'parenthesis', value: any, idx?: number}
+        let score = 0;
+        let bestSolution = null;
+        let timerId = null;
+        let timeLeft = 0;
+        let isPaused = false;
+
+        // Hide division for easy/medium
+        if (difficulty === 'easy' || difficulty === 'medium') {
+            document.getElementById('op-div').style.display = 'none';
+        }
+
+        // Initialize Confetti
+        Confetti.init(document.getElementById('confetti-canvas'));
+
+        // Solver algorithm
+        function solveGame(numbersList, targetNumber, diff) {
+            let best = { value: -1, expr: "" };
+            let bestDiff = Infinity;
+            let count = 0;
+
+            function search(list) {
+                count++;
+                if (count > 6000) return false; // Prevent thread freezing
+
+                for (let i = 0; i < list.length; i++) {
+                    let diffAmount = Math.abs(list[i].value - targetNumber);
+                    if (diffAmount < bestDiff) {
+                        bestDiff = diffAmount;
+                        best = { value: list[i].value, expr: list[i].expr };
+                        if (diffAmount === 0) return true; // Exact match found
+                    }
+                }
+
+                if (list.length === 1) return false;
+
+                for (let i = 0; i < list.length; i++) {
+                    for (let j = i + 1; j < list.length; j++) {
+                        let a = list[i];
+                        let b = list[j];
+                        
+                        let nextList = list.filter((_, idx) => idx !== i && idx !== j);
+
+                        // Addition
+                        let r_add = { value: a.value + b.value, expr: `(${a.expr} + ${b.expr})` };
+                        nextList.push(r_add);
+                        if (search(nextList)) return true;
+                        nextList.pop();
+
+                        // Subtraction (positive results only)
+                        if (a.value !== b.value) {
+                            let r_sub = a.value > b.value 
+                                ? { value: a.value - b.value, expr: `(${a.expr} - ${b.expr})` }
+                                : { value: b.value - a.value, expr: `(${b.expr} - ${a.expr})` };
+                            nextList.push(r_sub);
+                            if (search(nextList)) return true;
+                            nextList.pop();
+                        }
+
+                        // Multiplication (Medium/Hard only)
+                        if (diff !== 'easy') {
+                            if (a.value > 1 && b.value > 1) {
+                                let r_mul = { value: a.value * b.value, expr: `(${a.expr} × ${b.expr})` };
+                                nextList.push(r_mul);
+                                if (search(nextList)) return true;
+                                nextList.pop();
+                            }
+                        }
+
+                        // Division (Hard only)
+                        if (diff === 'hard') {
+                            if (b.value > 1 && a.value % b.value === 0) {
+                                let r_div = { value: a.value / b.value, expr: `(${a.expr} ÷ ${b.expr})` };
+                                nextList.push(r_div);
+                                if (search(nextList)) return true;
+                                nextList.pop();
+                            }
+                            if (a.value > 1 && a.value !== b.value && b.value % a.value === 0) {
+                                let r_div = { value: b.value / a.value, expr: `(${b.expr} ÷ ${a.expr})` };
+                                nextList.push(r_div);
+                                if (search(nextList)) return true;
+                                nextList.pop();
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            let initialList = numbersList.map(n => ({ value: n, expr: n.toString() }));
+            search(initialList);
+            return best;
+        }
+
+        // Generate puzzle based on difficulty
+        function generatePuzzle() {
+            let maxAttempts = 15;
+            let currentAttempt = 0;
+
+            while (currentAttempt < maxAttempts) {
+                currentAttempt++;
+                numbers = [];
+                targetVal = 0;
+
+                if (difficulty === 'easy') {
+                    // Small numbers, addition/subtraction
+                    targetVal = Math.floor(Math.random() * 80) + 15; // 15 to 95
+                    for (let i = 0; i < 6; i++) {
+                        numbers.push(Math.floor(Math.random() * 10) + 1); // 1-10
+                    }
+                } else if (difficulty === 'medium') {
+                    // Medium numbers, add/sub/mul
+                    targetVal = Math.floor(Math.random() * 350) + 80; // 80 to 430
+                    // 4 small, 2 medium
+                    for (let i = 0; i < 4; i++) {
+                        numbers.push(Math.floor(Math.random() * 10) + 1);
+                    }
+                    const mediums = [10, 20, 25, 50];
+                    numbers.push(mediums[Math.floor(Math.random() * mediums.length)]);
+                    numbers.push(mediums[Math.floor(Math.random() * mediums.length)]);
+                } else {
+                    // Standard countdown set, all operators
+                    targetVal = Math.floor(Math.random() * 899) + 100; // 100 to 998
+                    const pool = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 25, 50, 75, 100];
+                    let tempPool = [...pool];
+                    for (let i = 0; i < 6; i++) {
+                        let idx = Math.floor(Math.random() * tempPool.length);
+                        numbers.push(tempPool.splice(idx, 1)[0]);
+                    }
+                }
+
+                bestSolution = solveGame(numbers, targetVal, difficulty);
+
+                // For Easy, ensure exact solve. For Medium/Hard, allow slight diff if necessary.
+                if (bestSolution.value === targetVal) {
+                    break;
+                } else if (difficulty !== 'easy' && Math.abs(bestSolution.value - targetVal) <= 3) {
+                    break; // Close enough for hard/medium
+                }
+            }
+
+            // Display values
+            document.getElementById('target-value').textContent = targetVal;
+            renderNumberBlocks();
+            clearWorkspace();
+            document.getElementById('hint-card').style.display = 'none';
+
+            // Reset and start timer
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+            if (difficulty === 'easy') {
+                timeLeft = 90;
+            } else if (difficulty === 'medium') {
+                timeLeft = 60;
+            } else {
+                timeLeft = 45;
+            }
+            isPaused = false;
+            document.getElementById('pause-overlay').classList.remove('active');
+            document.getElementById('btn-pause').textContent = '⏸️';
+            updateTimerDisplay();
+
+            timerId = setInterval(() => {
+                if (!isPaused) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerId);
+                        timerId = null;
+                        handleTimeUp();
+                    }
+                }
+            }, 1000);
+        }
+
+        // Render source numbers row
+        function renderNumberBlocks() {
+            const container = document.getElementById('numbers-row');
+            container.innerHTML = '';
+            numbers.forEach((num, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'block number-block';
+                btn.textContent = num;
+                btn.dataset.idx = idx;
+                btn.onclick = () => useNumber(num, idx);
+                container.appendChild(btn);
+            });
+        }
+
+        // Move a number from the pool into the equation workspace
+        function useNumber(val, idx) {
+            Sound.playClick();
+            
+            // Push to expression
+            expressionTokens.push({ type: 'number', value: val, idx: idx });
+            
+            // Mark number card as disabled in the row
+            const btn = document.querySelector(`.number-block[data-idx="${idx}"]`);
+            if (btn) btn.classList.add('used');
+            
+            updateWorkspace();
+        }
+
+        // Add Operator to Workspace
+        function addOperator(op) {
+            Sound.playClick();
+            expressionTokens.push({ type: 'operator', value: op });
+            updateWorkspace();
+        }
+
+        // Add Parenthesis to Workspace
+        function addParenthesis(paren) {
+            Sound.playClick();
+            expressionTokens.push({ type: 'parenthesis', value: paren });
+            updateWorkspace();
+        }
+
+        // Clear All Workspace
+        function clearWorkspace() {
+            Sound.playUndo();
+            expressionTokens = [];
+            
+            // Enable all number blocks
+            document.querySelectorAll('.number-block').forEach(btn => {
+                btn.classList.remove('used');
+            });
+
+            updateWorkspace();
+        }
+
+        // Undo Last Action
+        function undoLast() {
+            if (expressionTokens.length === 0) return;
+            Sound.playUndo();
+            
+            const last = expressionTokens.pop();
+            
+            // If it was a number, re-enable it in the grid
+            if (last.type === 'number') {
+                const btn = document.querySelector(`.number-block[data-idx="${last.idx}"]`);
+                if (btn) btn.classList.remove('used');
+            }
+
+            updateWorkspace();
+        }
+
+        // Render formula tiles inside the workspace
+        function updateWorkspace() {
+            const area = document.getElementById('equation-area');
+            area.innerHTML = '';
+
+            if (expressionTokens.length === 0) {
+                const span = document.createElement('span');
+                span.className = 'placeholder-text';
+                span.id = 'lbl-placeholder';
+                span.textContent = t.lbl_placeholder;
+                area.appendChild(span);
+
+                const resDisplay = document.getElementById('calc-result');
+                resDisplay.className = 'calc-result invalid';
+                resDisplay.textContent = '= 0';
+                return;
+            }
+
+            // Draw lego blocks for each formula token
+            expressionTokens.forEach(tok => {
+                const span = document.createElement('span');
+                if (tok.type === 'number') {
+                    span.className = 'block number-block eq-item';
+                } else if (tok.type === 'operator') {
+                    span.className = 'block operator-block eq-item';
+                } else {
+                    span.className = 'block parenthesis-block eq-item';
+                }
+                span.textContent = tok.value;
+                area.appendChild(span);
+            });
+
+            // Live evaluate
+            const ev = evaluateFormula();
+            const resDisplay = document.getElementById('calc-result');
+
+            if (ev.status === 'ok') {
+                resDisplay.textContent = `= ${ev.val}`;
+                if (ev.val === targetVal) {
+                    resDisplay.className = 'calc-result exact';
+                } else {
+                    resDisplay.className = 'calc-result valid';
+                }
+            } else {
+                resDisplay.className = 'calc-result invalid';
+                resDisplay.textContent = ev.msg;
+            }
+        }
+
+        // Safe recursive descent parsing & calculation of mathematical expression
+        function evaluateFormula() {
+            // Tokenize expression
+            let tokens = expressionTokens.map(tok => {
+                if (tok.type === 'number') return tok.value;
+                if (tok.value === '−') return '-';
+                if (tok.value === '×') return '*';
+                if (tok.value === '÷') return '/';
+                return tok.value;
+            });
+
+            let index = 0;
+
+            function peek() {
+                return tokens[index];
+            }
+
+            function consume(expected) {
+                let tok = tokens[index];
+                if (expected && tok !== expected) {
+                    throw new Error("Syntax Error");
+                }
+                index++;
+                return tok;
+            }
+
+            function parseExpression() {
+                let val = parseTerm();
+                while (peek() === '+' || peek() === '-') {
+                    let op = consume();
+                    let right = parseTerm();
+                    if (op === '+') {
+                        val = val + right;
+                    } else {
+                        let subVal = val - right;
+                        if (subVal < 0) {
+                            throw new Error(t.msg_negative);
+                        }
+                        val = subVal;
+                    }
+                }
+                return val;
+            }
+
+            function parseTerm() {
+                let val = parseFactor();
+                while (peek() === '*' || peek() === '/') {
+                    let op = consume();
+                    let right = parseFactor();
+                    if (op === '*') {
+                        val = val * right;
+                    } else {
+                        if (right === 0) {
+                            throw new Error(t.msg_div_zero);
+                        }
+                        if (val % right !== 0) {
+                            throw new Error(t.msg_fraction);
+                        }
+                        val = val / right;
+                    }
+                }
+                return val;
+            }
+
+            function parseFactor() {
+                let tok = peek();
+                if (tok === '(') {
+                    consume('(');
+                    let val = parseExpression();
+                    consume(')');
+                    return val;
+                } else if (typeof tok === 'number') {
+                    consume();
+                    return tok;
+                } else {
+                    throw new Error("Syntax Error");
+                }
+            }
+
+            try {
+                if (tokens.length === 0) {
+                    return { status: 'invalid', msg: '' };
+                }
+                let res = parseExpression();
+                if (index < tokens.length) {
+                    throw new Error("Syntax Error");
+                }
+                return { status: 'ok', val: res };
+            } catch (err) {
+                // If it is our mathematical rule validation error, show the rule. Otherwise show generic error.
+                let msg = err.message === 'Syntax Error' ? t.msg_invalid : err.message;
+                return { status: 'invalid', msg: msg };
+            }
+        }
+
+        // Show Solution Hint
+        function showHint() {
+            Sound.playClick();
+            const card = document.getElementById('hint-card');
+            const text = document.getElementById('hint-text');
+
+            if (bestSolution && bestSolution.value !== -1) {
+                // Formatting equations nicely
+                let cleanedExpr = bestSolution.expr
+                    .replace(/\*/g, '×')
+                    .replace(/\//g, '÷')
+                    .replace(/-/g, '−');
+                
+                // Remove outer unnecessary parenthesis if there are any
+                if (cleanedExpr.startsWith('(') && cleanedExpr.endsWith(')')) {
+                    cleanedExpr = cleanedExpr.substring(1, cleanedExpr.length - 1);
+                }
+
+                if (bestSolution.value === targetVal) {
+                    text.textContent = t.solution_is + cleanedExpr + ` = ${targetVal}`;
+                } else {
+                    let diff = Math.abs(bestSolution.value - targetVal);
+                    text.textContent = t.solution_close.replace('{diff}', diff) + cleanedExpr + ` = ${bestSolution.value}`;
+                }
+                card.style.display = 'block';
+            } else {
+                text.textContent = "No solution found!";
+                card.style.display = 'block';
+            }
+        }
+
+        // Grade submission & send message to Hub
+        function submitResult() {
+            const ev = evaluateFormula();
+            if (ev.status !== 'ok') {
+                Sound.playFail();
+                return;
+            }
+
+            const val = ev.val;
+            const diff = Math.abs(val - targetVal);
+
+            let coins = 0;
+            let xp = 0;
+            let title = "";
+            let desc = "";
+            
+            if (diff === 0) {
+                // Perfect score
+                xp = difficulty === 'easy' ? 30 : (difficulty === 'medium' ? 60 : 100);
+                coins = difficulty === 'easy' ? 5 : (difficulty === 'medium' ? 10 : 15);
+                title = t.solved_perfect;
+                desc = t.msg_perfect_desc;
+                Sound.playSuccess();
+                Confetti.start();
+            } else if (diff <= 5) {
+                // Close score
+                xp = difficulty === 'easy' ? 10 : (difficulty === 'medium' ? 25 : 45);
+                coins = difficulty === 'easy' ? 1 : (difficulty === 'medium' ? 3 : 5);
+                title = t.solved_close;
+                desc = t.msg_close_desc.replace('{diff}', diff);
+                Sound.playSuccess();
+            } else if (diff <= 10) {
+                // Moderate score
+                xp = difficulty === 'easy' ? 5 : (difficulty === 'medium' ? 10 : 20);
+                coins = 0;
+                title = t.solved_far;
+                desc = t.msg_far_desc.replace('{diff}', diff);
+                Sound.playFail();
+            } else {
+                // Off by too much
+                Sound.playFail();
+                alert(`Calculated: ${val}, Target: ${targetVal}. Keep trying to get closer!`);
+                return;
+            }
+
+            // Clear the timer since the round is resolved
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+
+            // Sync with parent Hub
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'game_complete',
+                    xp: xp,
+                    coins: coins
+                }, '*');
+            }
+
+            score += xp;
+            document.getElementById('score-badge').textContent = `🏆 ${score}`;
+
+            // Show result modal
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').textContent = desc;
+            document.getElementById('modal-reward').textContent = t.reward
+                .replace('{coins}', coins)
+                .replace('{xp}', xp);
+            
+            document.getElementById('result-modal').classList.add('active');
+        }
+
+        function updateTimerDisplay() {
+            const badge = document.getElementById('timer-badge');
+            if (badge) {
+                badge.textContent = `⏱️ ${timeLeft}s`;
+                if (timeLeft <= 10) {
+                    badge.classList.add('warning');
+                } else {
+                    badge.classList.remove('warning');
+                }
+            }
+        }
+
+        function togglePause() {
+            Sound.playClick();
+            isPaused = !isPaused;
+            const overlay = document.getElementById('pause-overlay');
+            const pauseBtn = document.getElementById('btn-pause');
+            if (isPaused) {
+                overlay.classList.add('active');
+                if (pauseBtn) pauseBtn.textContent = '▶️';
+            } else {
+                overlay.classList.remove('active');
+                if (pauseBtn) pauseBtn.textContent = '⏸️';
+            }
+        }
+
+        function handleTimeUp() {
+            Sound.playFail();
+            
+            // Show result modal as Time's Up
+            document.getElementById('modal-title').textContent = t.time_up;
+            document.getElementById('modal-body').textContent = t.time_up_desc;
+            document.getElementById('modal-reward').textContent = "+0 XP";
+            document.getElementById('modal-btn-next').textContent = t.btn_retry;
+            
+            document.getElementById('result-modal').classList.add('active');
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (timerId) {
+                clearInterval(timerId);
+            }
+        });
+
+        // Start Next Level / Round
+        function nextRound() {
+            Sound.playClick();
+            Confetti.stop();
+            document.getElementById('result-modal').classList.remove('active');
+            generatePuzzle();
+        }
+
+        // Initialize Game
+        generatePuzzle();
+    </script>
+</body>
+
+</html>

@@ -169,7 +169,10 @@
                     <input type="checkbox" id="disable-timer-cb"> Disable Rest Timer (No 5-min breaks)
                 </label>
             </div>
-            <button onclick="saveStats()">Save Player Stats</button>
+            <div class="btn-row" style="margin-top: 15px;">
+                <button onclick="saveStats()">Save Player Stats</button>
+                <button class="secondary" onclick="resetPlayTimer()">Reset Play Timer & End Breaks ⏰</button>
+            </div>
         </div>
 
         <div class="section">
@@ -220,6 +223,14 @@
             localStorage.setItem('admin_disable_timer', disableTimer ? 'true' : 'false');
 
             alert("Stats and Settings saved!");
+        }
+
+        function resetPlayTimer() {
+            state.isResting = false;
+            state.continuousPlayMinutes = 0;
+            state.restUntil = 0;
+            localStorage.setItem('kids_hub_state', JSON.stringify(state));
+            alert("Play timer reset and active breaks cleared!");
         }
 
         function resetProgress() {
