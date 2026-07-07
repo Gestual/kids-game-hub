@@ -1,0 +1,223 @@
+:root {
+    --primary: #ffffff;
+    --accent: #ff0055;
+    --accent-blue: #00f2ff;
+    --accent-green: #00ff88;
+    --accent-purple: #7000ff;
+    --bg-main: #090a0f;
+    --glass: rgba(15, 20, 30, 0.9);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --round: 18px;
+    --font-main: 'Fredoka', sans-serif;
+    --font-heading: 'Luckiest Guy', cursive;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-main);
+    background-color: var(--bg-main);
+    color: white;
+    overflow: hidden;
+    user-select: none;
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+    background-image: radial-gradient(circle at 50% 50%, rgba(112,0,255,0.06) 0%, rgba(9,10,15,0.4) 100%);
+}
+
+/* Header */
+#hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.hub-back-btn {
+    background: var(--glass);
+    border: 2px solid var(--glass-border);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: 0.2s;
+}
+
+.hub-back-btn:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+}
+
+#title-text {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: var(--accent-blue);
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+}
+
+#controls-panel {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.btn-ctrl {
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: 0.2s;
+}
+
+.btn-ctrl:hover {
+    transform: translateY(-2px);
+}
+
+.btn-ctrl.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+    color: white;
+}
+
+.btn-ctrl.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    color: white;
+}
+
+.bpm-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+#bpm-select {
+    padding: 8px 12px;
+    background: var(--glass);
+    border: 2px solid var(--glass-border);
+    color: white;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Sequencer Grid Card */
+.card {
+    flex: 1;
+    background: var(--glass);
+    border: 3px solid var(--glass-border);
+    border-radius: var(--round);
+    padding: 15px;
+    box-sizing: border-box;
+    display: flex;
+    gap: 15px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+#labels-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 100px;
+}
+
+.row-label {
+    font-weight: bold;
+    font-size: 0.95rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+#grid-container {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    align-items: center;
+}
+
+#sequencer-grid {
+    display: grid;
+    grid-template-rows: repeat(8, 40px);
+    grid-template-columns: repeat(16, 40px);
+    gap: 6px;
+    width: fit-content;
+}
+
+.grid-pad {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s;
+}
+
+.grid-pad:hover {
+    transform: scale(1.05);
+}
+
+.grid-pad.active-col {
+    border-color: var(--accent-blue);
+    background: rgba(0, 242, 255, 0.08);
+}
+
+/* Active sound states with glows */
+.grid-pad.sound-on[data-row="0"] { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+.grid-pad.sound-on[data-row="1"] { background: var(--accent-purple); box-shadow: 0 0 10px var(--accent-purple); }
+.grid-pad.sound-on[data-row="2"] { background: var(--accent-blue); box-shadow: 0 0 10px var(--accent-blue); }
+.grid-pad.sound-on[data-row="3"] { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+.grid-pad.sound-on[data-row="4"] { background: #ffd93d; box-shadow: 0 0 10px #ffd93d; }
+.grid-pad.sound-on[data-row="5"] { background: #ff9800; box-shadow: 0 0 10px #ff9800; }
+.grid-pad.sound-on[data-row="6"] { background: #e84393; box-shadow: 0 0 10px #e84393; }
+.grid-pad.sound-on[data-row="7"] { background: #6bc877; box-shadow: 0 0 10px #6bc877; }
+
+/* Footer Action Panel */
+#actions-panel {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-action {
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+    border: none;
+    color: black;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    padding: 12px 40px;
+    border-radius: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+    transition: transform 0.1s;
+}
+
+.btn-action:active {
+    transform: scale(0.98);
+}

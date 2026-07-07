@@ -19,7 +19,10 @@ const Hub = {
             hats: ['none'],
             glasses: ['none']
         },
-        pendingGameId: null
+        pendingGameId: null,
+        pet: null,
+        unlockedBadges: [],
+        gamesPlayedCounts: {}
     },
 
     backgrounds: [
@@ -93,9 +96,10 @@ const Hub = {
                 crack_the_code: "Crack the Code",
                 pixel_art: "Pixel Art Color",
                 little_merchant: "Little Merchant",
-                where_is_nil: "Where is Nil?",
                 monster_chef: "Magic Cauldron",
-                target_sum: "Target Sum"
+                target_sum: "Target Sum",
+                coding_adventure: "Coding Adventure",
+                music_maker: "Beat Sandbox"
             },
             admin: "Parent Panel 🔒",
             personalize_title: "Personalize"
@@ -124,7 +128,9 @@ const Hub = {
                 little_merchant: "La Marchande",
                 where_is_nil: "Où est Nil ?",
                 monster_chef: "Chaudron Magique",
-                target_sum: "Le Compte Est Bon"
+                target_sum: "Le Compte Est Bon",
+                coding_adventure: "Aventure Code",
+                music_maker: "Bac à Sable Beat"
             },
             admin: "Espace Parents 🔒",
             select_difficulty: "Choisir la difficulté",
@@ -141,7 +147,7 @@ const Hub = {
             tab_cards: "Avatars",
             tab_acc: "Accesorios",
             rest_title: "¡Pausa Gaming! 🧘",
-            rest_msg: "¡Sesión intensa! Tómate 5 minutos de descanso para la vista.",
+            rest_msg: "¡Sesión intensa! Tómate 5 minutes de descanso para la vista.",
             games: {
                 sudokids: "SudoKids",
                 wordsearch: "Sopa de Letras",
@@ -154,7 +160,9 @@ const Hub = {
                 little_merchant: "La Tiendita",
                 where_is_nil: "¿Dónde está Nil?",
                 monster_chef: "Caldero Mágico",
-                target_sum: "Suma Objetivo"
+                target_sum: "Suma Objetivo",
+                coding_adventure: "Aventura Código",
+                music_maker: "Caja de Ritmos"
             },
             admin: "Panel de Padres 🔒",
             select_difficulty: "Elegir Dificultad",
@@ -174,11 +182,14 @@ const Hub = {
         { id: 'little_merchant', icon: '🛒', color: '#FF9800' },
         { id: 'where_is_nil', icon: '🌍', color: '#00F2FF' },
         { id: 'monster_chef', icon: '👨‍🍳', color: '#e84393' },
-        { id: 'target_sum', icon: '🎯', color: '#6c5ce7' }
+        { id: 'target_sum', icon: '🎯', color: '#6c5ce7' },
+        { id: 'coding_adventure', icon: '🤖', color: '#00ff88' },
+        { id: 'music_maker', icon: '🎵', color: '#ff0055' }
     ],
 
     init() {
         this.loadState();
+        this.checkBedtimeLock();
         this.detectLanguage();
         this.renderHub();
         this.applyBackground();
@@ -210,12 +221,39 @@ const Hub = {
                         this.addXP(event.data.amount || 0);
                         break;
                     case 'game_complete':
-                        if (event.data.xp) this.addXP(event.data.xp);
-                        if (event.data.coins) {
-                            this.state.coins += event.data.coins;
+                        let xp = event.data.xp || 0;
+                        let coins = event.data.coins || 0;
+                        
+                        // Track games played count
+                        const gameId = this.state.pendingGameId;
+                        if (gameId) {
+                            if (!this.state.gamesPlayedCounts) this.state.gamesPlayedCounts = {};
+                            this.state.gamesPlayedCounts[gameId] = (this.state.gamesPlayedCounts[gameId] || 0) + 1;
                         }
+
+                        // Apply Focus Mode double multiplier
+                        const activeFocus = localStorage.getItem('admin_focus_mode') || 'none';
+                        const gameCategory = this.getGameCategory(gameId);
+                        
+                        let doubled = false;
+                        if (activeFocus !== 'none' && activeFocus === gameCategory) {
+                            xp *= 2;
+                            coins *= 2;
+                            doubled = true;
+                        }
+                        
+                        if (xp) this.addXP(xp);
+                        if (coins) this.state.coins += coins;
+                        
                         this.saveState();
                         this.updateUI('stats');
+                        
+                        if (doubled) {
+                            this.showAlert("🎯 Focus Mode Bonus!", `Double XP & Coins earned for playing a ${gameCategory.toUpperCase()} game!`);
+                        }
+                        
+                        // Check achievements
+                        this.checkAchievements();
                         break;
                     case 'closeGame':
                         this.closeGame();
@@ -227,6 +265,20 @@ const Hub = {
                 }
             }
         });
+    },
+
+    getGameCategory(gameId) {
+        if (!gameId) return 'none';
+        const mathGames = ['sudokids', 'hero_calculus', 'target_sum'];
+        const languageGames = ['wordsearch', 'where_is_nil', 'monster_chef'];
+        const logicGames = ['nonogram', '2048', 'memory', 'crack_the_code', 'coding_adventure'];
+        const creativeGames = ['pixel_art', 'little_merchant', 'music_maker'];
+        
+        if (mathGames.includes(gameId)) return 'math';
+        if (languageGames.includes(gameId)) return 'language';
+        if (logicGames.includes(gameId)) return 'logic';
+        if (creativeGames.includes(gameId)) return 'creative';
+        return 'none';
     },
 
     ads: [
@@ -263,6 +315,8 @@ const Hub = {
                     this.state.unlockedBackgrounds.push('forest');
                 }
             }
+            if (!this.state.unlockedBadges) this.state.unlockedBadges = [];
+            if (!this.state.gamesPlayedCounts) this.state.gamesPlayedCounts = {};
         }
     },
 
@@ -487,6 +541,70 @@ const Hub = {
                     display.appendChild(item);
                 });
             });
+        } else if (this.activeTab === 'pet') {
+            const petContainer = document.createElement('div');
+            petContainer.style.gridColumn = '1 / -1';
+            petContainer.style.display = 'flex';
+            petContainer.style.flexDirection = 'column';
+            petContainer.style.alignItems = 'center';
+            petContainer.style.padding = '20px';
+            petContainer.style.background = 'rgba(255, 255, 255, 0.03)';
+            petContainer.style.borderRadius = '20px';
+            petContainer.style.border = '2px dashed var(--glass-border)';
+            petContainer.style.textAlign = 'center';
+
+            if (!this.state.pet) {
+                petContainer.innerHTML = `
+                    <div style="font-size: 5rem; margin-bottom: 10px; animation: bounce 2s infinite;">🥚</div>
+                    <h3 style="font-family: var(--font-heading); font-size: 1.8rem; color: var(--accent); margin: 0 0 10px;">Adopt a Magical Pet!</h3>
+                    <p style="font-size: 1rem; color: #aaa; max-width: 400px; margin: 0 0 20px;">Purchase a mystery egg using your coins. Feed and play with your pet to help it hatch into a legendary companion!</p>
+                    <button onclick="Hub.adoptPet()" style="background: linear-gradient(135deg, var(--accent-secondary), var(--accent)); color: #000; font-family: var(--font-heading); font-size: 1.3rem; border: none; padding: 12px 30px; border-radius: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);">Adopt Egg (100 💰)</button>
+                `;
+            } else {
+                const pet = this.state.pet;
+                let petEmoji = '🥚';
+                let petName = 'Magical Egg';
+                let instructions = 'Feed or play with your egg to help it hatch!';
+                
+                if (pet.stage === 'baby') {
+                    petEmoji = '🐥';
+                    petName = 'Baby Chick';
+                    instructions = 'Keep growing your pet to unlock its teen form!';
+                } else if (pet.stage === 'teen') {
+                    petEmoji = '🦖';
+                    petName = 'Teen Dino';
+                    instructions = 'Your pet is growing strong! Reach 100% to evolve to a Legendary Dragon!';
+                } else if (pet.stage === 'adult') {
+                    petEmoji = '🐉';
+                    petName = 'Legendary Dragon';
+                    instructions = 'Your pet has reached its final form! Max Level Achieved 🏆';
+                }
+
+                const progress = pet.progress || 0;
+
+                petContainer.innerHTML = `
+                    <div style="font-size: 6rem; margin-bottom: 15px; animation: float 3s ease-in-out infinite;">${petEmoji}</div>
+                    <h3 style="font-family: var(--font-heading); font-size: 2rem; color: var(--accent); margin: 0 0 5px;">${petName}</h3>
+                    <div style="font-size: 1.1rem; color: var(--accent-secondary); font-weight: bold; margin-bottom: 15px;">Level ${pet.level || 1} (${pet.stage.toUpperCase()})</div>
+                    
+                    ${pet.stage !== 'adult' ? `
+                        <div style="width: 100%; max-width: 300px; height: 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative; margin-left: auto; margin-right: auto;">
+                            <div style="width: ${progress}%; height: 100%; background: linear-gradient(90deg, var(--accent-tertiary), var(--accent)); transition: width 0.3s ease;"></div>
+                            <span style="position: absolute; width: 100%; text-align: center; left: 0; top: 0; font-size: 0.8rem; font-weight: bold; line-height: 20px; color: white;">${progress}%</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #888; margin: 0 0 20px;">${instructions}</p>
+                        
+                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                            <button onclick="Hub.feedPet()" style="background: var(--glass); border: 2px solid var(--accent); color: white; padding: 10px 20px; border-radius: 12px; font-family: 'Luckiest Guy', cursive; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">🍎 Feed (10 💰)</button>
+                            <button onclick="Hub.playWithPet()" style="background: var(--glass); border: 2px solid var(--accent-secondary); color: white; padding: 10px 20px; border-radius: 12px; font-family: 'Luckiest Guy', cursive; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">⚽ Play (3 ⚡)</button>
+                        </div>
+                    ` : `
+                        <p style="font-size: 1.1rem; color: #00ff88; margin: 10px 0; font-family: 'Luckiest Guy', cursive;">🏆 Max Level Achieved! 🐉</p>
+                        <p style="font-size: 0.9rem; color: #888; margin: 0 0 20px;">Your dragon is happy and fully grown!</p>
+                    `}
+                `;
+            }
+            display.appendChild(petContainer);
         }
     },
 
@@ -691,8 +809,9 @@ const Hub = {
     },
 
     startTimers() {
-        // Energy recharge timer
+        // Energy recharge timer & Bedtime check
         setInterval(() => {
+            this.checkBedtimeLock();
             if (this.state.energy < 5) {
                 this.state.energy++;
                 this.updateUI('energy');
@@ -853,6 +972,314 @@ const Hub = {
         } else {
             display.style.color = '#00f2ff';
         }
+    },
+
+    adoptPet() {
+        if (this.state.coins < 100) {
+            this.showAlert("Not Enough Coins 💰", "You need 100 coins to adopt a pet egg. Keep playing games to earn more!");
+            return;
+        }
+        this.state.coins -= 100;
+        this.state.pet = { stage: 'egg', progress: 0, level: 1 };
+        this.saveState();
+        this.updateUI('stats');
+        this.renderPersonalize();
+        this.burstConfetti();
+        this.showAlert("Adopted! 🐣", "You adopted a Magical Pet Egg! Feed and play with it to hatch it.");
+    },
+
+    feedPet() {
+        if (!this.state.pet) return;
+        if (this.state.coins < 10) {
+            this.showAlert("Not Enough Coins 💰", "You need 10 coins to feed your pet.");
+            return;
+        }
+        this.state.coins -= 10;
+        this.state.pet.progress = (this.state.pet.progress || 0) + 15;
+        this.saveState();
+        this.updateUI('stats');
+
+        if (this.state.pet.progress >= 100) {
+            this.evolvePet();
+        } else {
+            this.renderPersonalize();
+        }
+    },
+
+    playWithPet() {
+        if (!this.state.pet) return;
+        if (this.state.energy < 3) {
+            this.showAlert("Not Enough Energy ⚡", "You need at least 3 energy to play with your pet. Energy recharges every minute!");
+            return;
+        }
+        this.state.energy -= 3;
+        this.state.pet.progress = (this.state.pet.progress || 0) + 25;
+        this.saveState();
+        this.updateUI('energy');
+
+        if (this.state.pet.progress >= 100) {
+            this.evolvePet();
+        } else {
+            this.renderPersonalize();
+        }
+    },
+
+    evolvePet() {
+        const pet = this.state.pet;
+        let oldStage = pet.stage;
+        let newStage = 'baby';
+        let title = 'Hatched! 🐣';
+        let msg = 'Your mystery egg hatched into a cute Baby Chick! 🐥';
+
+        if (oldStage === 'egg') {
+            newStage = 'baby';
+            pet.level = 2;
+        } else if (oldStage === 'baby') {
+            newStage = 'teen';
+            pet.level = 3;
+            title = 'Evolved! 🦖';
+            msg = 'Your baby chick grew into a strong Teen Dino!';
+        } else if (oldStage === 'teen') {
+            newStage = 'adult';
+            pet.level = 4;
+            title = 'Legendary Evolved! 🐉';
+            msg = 'Your pet Dino evolved into a majestic, fully grown Legendary Dragon! 🏆';
+        }
+
+        pet.stage = newStage;
+        pet.progress = 0;
+        this.saveState();
+        this.renderPersonalize();
+        this.burstConfetti();
+        this.showAlert(title, msg);
+    },
+
+    burstConfetti() {
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.left = '50vw';
+            confetti.style.top = '50vh';
+            confetti.style.width = Math.random() * 12 + 6 + 'px';
+            confetti.style.height = Math.random() * 12 + 6 + 'px';
+            
+            const colors = ['#00f2ff', '#00ff88', '#7000ff', '#ff0055', '#ffd93d', '#ff92ad'];
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            confetti.style.zIndex = '9999';
+            confetti.style.pointerEvents = 'none';
+            
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 15 + 5;
+            let vx = Math.cos(angle) * velocity;
+            let vy = Math.sin(angle) * velocity - 5;
+            
+            document.body.appendChild(confetti);
+            
+            let posX = window.innerWidth / 2;
+            let posY = window.innerHeight / 2;
+            let rotation = Math.random() * 360;
+            let rotationSpeed = Math.random() * 10 - 5;
+            
+            const updateConfetti = () => {
+                vy += 0.4;
+                vx *= 0.98;
+                posX += vx;
+                posY += vy;
+                rotation += rotationSpeed;
+                
+                confetti.style.left = posX + 'px';
+                confetti.style.top = posY + 'px';
+                confetti.style.transform = `rotate(${rotation}deg)`;
+                
+                if (posY < window.innerHeight && posX > 0 && posX < window.innerWidth) {
+                    requestAnimationFrame(updateConfetti);
+                } else {
+                    confetti.remove();
+                }
+            };
+            requestAnimationFrame(updateConfetti);
+        }
+    },
+
+    checkBedtimeLock() {
+        const bedtimeStart = localStorage.getItem('admin_bedtime_start');
+        const bedtimeEnd = localStorage.getItem('admin_bedtime_end');
+        
+        if (!bedtimeStart || !bedtimeEnd) return;
+        
+        const now = new Date();
+        const currentMin = now.getHours() * 60 + now.getMinutes();
+        
+        const [startH, startM] = bedtimeStart.split(':').map(Number);
+        const [endH, endM] = bedtimeEnd.split(':').map(Number);
+        
+        const startMin = startH * 60 + startM;
+        const endMin = endH * 60 + endM;
+        
+        let isBedtime = false;
+        if (startMin < endMin) {
+            isBedtime = currentMin >= startMin && currentMin < endMin;
+        } else {
+            isBedtime = currentMin >= startMin || currentMin < endMin;
+        }
+        
+        const lockOverlay = document.getElementById('bedtime-lock-overlay');
+        if (isBedtime) {
+            if (!lockOverlay) {
+                const overlay = document.createElement('div');
+                overlay.id = 'bedtime-lock-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100vw';
+                overlay.style.height = '100vh';
+                overlay.style.background = '#0b0e14';
+                overlay.style.zIndex = '10000';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.fontFamily = "'Luckiest Guy', cursive";
+                overlay.style.color = '#fff';
+                overlay.style.textAlign = 'center';
+                
+                overlay.innerHTML = `
+                    <div style="font-size: 6rem; margin-bottom: 20px; animation: bounce 3s infinite;">💤</div>
+                    <h1 style="font-size: 3rem; color: #ff0055; text-shadow: 0 0 15px rgba(255,0,85,0.4); margin: 0 0 10px;">Bedtime Lock Active!</h1>
+                    <p style="font-family: 'Fredoka', sans-serif; font-size: 1.2rem; color: #aaa; max-width: 400px; padding: 0 20px; margin: 0;">Time to rest and go to sleep. The hub will unlock at ${bedtimeEnd}. Good night! 🌙</p>
+                `;
+                document.body.appendChild(overlay);
+            }
+        } else {
+            if (lockOverlay) {
+                lockOverlay.remove();
+            }
+        }
+    },
+
+    openAchievements() {
+        document.getElementById('achievements-modal').classList.remove('hidden');
+        this.renderAchievements();
+    },
+
+    closeAchievements() {
+        document.getElementById('achievements-modal').classList.add('hidden');
+    },
+
+    renderAchievements() {
+        const list = document.getElementById('achievements-list');
+        list.innerHTML = '';
+        
+        const badges = [
+            {
+                id: 'math_genius',
+                name: 'Math Genius 🔢',
+                desc: 'Play math games (SudoKids, Hero Calculus, or Target Sum) 3 times.',
+                current: () => (this.state.gamesPlayedCounts['sudokids'] || 0) + (this.state.gamesPlayedCounts['hero_calculus'] || 0) + (this.state.gamesPlayedCounts['target_sum'] || 0),
+                target: 3,
+                reward: 'Unlocks legendary Golden Phoenix avatar!'
+            },
+            {
+                id: 'logic_master',
+                name: 'Logic Master 🤖',
+                desc: 'Complete at least one Coding Adventure mission.',
+                current: () => this.state.gamesPlayedCounts['coding_adventure'] || 0,
+                target: 1,
+                reward: 'Unlocks Undersea City background!'
+            },
+            {
+                id: 'beat_creator',
+                name: 'Beat Creator 🎵',
+                desc: 'Build and save a beat in the Beat Sandbox.',
+                current: () => this.state.gamesPlayedCounts['music_maker'] || 0,
+                target: 1,
+                reward: 'Unlocks rare Monocle accessory!'
+            },
+            {
+                id: 'pet_parent',
+                name: 'Pet Parent 🐣',
+                desc: 'Hatch your adopted magical pet egg.',
+                current: () => (this.state.pet && this.state.pet.level >= 2) ? 1 : 0,
+                target: 1,
+                reward: 'Earn 100 bonus Coins!'
+            }
+        ];
+
+        badges.forEach(b => {
+            const isUnlocked = (this.state.unlockedBadges || []).includes(b.id);
+            const val = b.current();
+            const percent = Math.min(100, Math.floor((val / b.target) * 100));
+
+            const card = document.createElement('div');
+            card.style.background = 'rgba(255, 255, 255, 0.03)';
+            card.style.border = '2px solid ' + (isUnlocked ? 'var(--accent-secondary)' : 'var(--glass-border)');
+            card.style.borderRadius = '15px';
+            card.style.padding = '15px';
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.gap = '8px';
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-family: var(--font-heading); font-size: 1.2rem; color: ${isUnlocked ? 'var(--accent-secondary)' : 'white'}">${b.name}</span>
+                    <span style="font-size: 1.2rem;">${isUnlocked ? '✅' : '🔒'}</span>
+                </div>
+                <div style="font-size: 0.9rem; color: #aaa; font-family: 'Fredoka', sans-serif;">${b.desc}</div>
+                <div style="font-size: 0.8rem; color: var(--accent-secondary); font-weight: bold; font-family: 'Fredoka', sans-serif;">Reward: ${b.reward}</div>
+                
+                ${!isUnlocked ? `
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; position: relative; margin-top: 4px;">
+                        <div style="width: ${percent}%; height: 100%; background: var(--accent);"></div>
+                    </div>
+                    <span style="font-size: 0.75rem; color: #888; font-family: 'Fredoka', sans-serif;">Progress: ${val}/${b.target}</span>
+                ` : `
+                    <div style="font-size: 0.8rem; color: #00ff88; font-weight: bold; font-family: 'Fredoka', sans-serif;">UNLOCKED! 🎉</div>
+                `}
+            `;
+            list.appendChild(card);
+        });
+    },
+
+    checkAchievements() {
+        if (!this.state.unlockedBadges) this.state.unlockedBadges = [];
+        if (!this.state.gamesPlayedCounts) this.state.gamesPlayedCounts = {};
+
+        const mathPlayed = (this.state.gamesPlayedCounts['sudokids'] || 0) + (this.state.gamesPlayedCounts['hero_calculus'] || 0) + (this.state.gamesPlayedCounts['target_sum'] || 0);
+        const logicPlayed = this.state.gamesPlayedCounts['coding_adventure'] || 0;
+        const musicPlayed = this.state.gamesPlayedCounts['music_maker'] || 0;
+        const petHatched = (this.state.pet && this.state.pet.level >= 2) ? 1 : 0;
+
+        const checkList = [
+            { id: 'math_genius', condition: mathPlayed >= 3, name: 'Math Genius 🔢', unlock: () => {
+                if (!this.state.unlockedCards.includes('phoenix')) {
+                    this.state.unlockedCards.push('phoenix');
+                }
+            }},
+            { id: 'logic_master', condition: logicPlayed >= 1, name: 'Logic Master 🤖', unlock: () => {
+                if (!this.state.unlockedBackgrounds.includes('undersea_city')) {
+                    this.state.unlockedBackgrounds.push('undersea_city');
+                }
+            }},
+            { id: 'beat_creator', condition: musicPlayed >= 1, name: 'Beat Creator 🎵', unlock: () => {
+                if (!this.state.unlockedAccessories.glasses.includes('monocle')) {
+                    this.state.unlockedAccessories.glasses.push('monocle');
+                }
+            }},
+            { id: 'pet_parent', condition: petHatched >= 1, name: 'Pet Parent 🐣', unlock: () => {
+                this.state.coins += 100;
+            }}
+        ];
+
+        checkList.forEach(c => {
+            if (c.condition && !this.state.unlockedBadges.includes(c.id)) {
+                this.state.unlockedBadges.push(c.id);
+                c.unlock();
+                this.saveState();
+                this.burstConfetti();
+                this.showAlert("🏆 Achievement Unlocked!", `Congratulations! You unlocked the [${c.name}] badge! Check your rewards!`);
+            }
+        });
     }
 };
 

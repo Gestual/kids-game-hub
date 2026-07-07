@@ -186,6 +186,53 @@
         </div>
 
         <div class="section">
+            <h2>Focus Mode & Bedtime Lock Settings</h2>
+            <div class="grid-inputs">
+                <div class="input-group">
+                    <label>Active Focus Mode</label>
+                    <select id="focus-mode-select" style="padding: 10px; border: 2px solid #ddd; border-radius: 10px; font-family: inherit;">
+                        <option value="none">None (Balanced Play)</option>
+                        <option value="math">Math Focus (+100% XP/Coins on Math)</option>
+                        <option value="language">Language Focus (+100% XP/Coins on Language)</option>
+                        <option value="logic">Logic Focus (+100% XP/Coins on Logic)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Bedtime Start Hour</label>
+                    <input type="time" id="bedtime-start-input" style="padding: 10px; border: 2px solid #ddd; border-radius: 10px; font-family: inherit;">
+                </div>
+                <div class="input-group">
+                    <label>Bedtime End Hour</label>
+                    <input type="time" id="bedtime-end-input" style="padding: 10px; border: 2px solid #ddd; border-radius: 10px; font-family: inherit;">
+                </div>
+            </div>
+            <div class="btn-row" style="margin-top: 15px;">
+                <button onclick="saveFocusAndBedtime()">Save Focus & Bedtime Settings</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Learning Analytics (Play Time Distribution)</h2>
+            <div style="display: flex; justify-content: center; margin-top: 15px; flex-wrap: wrap; gap: 20px; align-items: center;">
+                <canvas id="analytics-chart" width="200" height="200"></canvas>
+                <div style="text-align: left; font-family: inherit;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="display: inline-block; width: 12px; height: 12px; background: #6BCB77; border-radius: 3px;"></span> Math Games: 40%
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="display: inline-block; width: 12px; height: 12px; background: #00F2FF; border-radius: 3px;"></span> Language Games: 25%
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="display: inline-block; width: 12px; height: 12px; background: #FFD93D; border-radius: 3px;"></span> Logic/Coding: 20%
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="display: inline-block; width: 12px; height: 12px; background: #e84393; border-radius: 3px;"></span> Creative/Music: 15%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
             <h2>Nonogram Puzzle Creator</h2>
             <p>Click cells to create a new puzzle pattern.</p>
             <div class="input-group" style="margin-bottom: 10px;">
@@ -223,6 +270,66 @@
             const playTimerEnabled = localStorage.getItem('admin_enable_play_timer') !== 'false';
             document.getElementById('enable-play-timer-cb').checked = playTimerEnabled;
             document.getElementById('play-timer-minutes-select').value = localStorage.getItem('admin_play_timer_minutes') || '10';
+
+            // Load focus mode and bedtime
+            document.getElementById('focus-mode-select').value = localStorage.getItem('admin_focus_mode') || 'none';
+            document.getElementById('bedtime-start-input').value = localStorage.getItem('admin_bedtime_start') || '';
+            document.getElementById('bedtime-end-input').value = localStorage.getItem('admin_bedtime_end') || '';
+            
+            // Draw chart
+            drawAnalyticsChart();
+        }
+
+        function saveFocusAndBedtime() {
+            const focus = document.getElementById('focus-mode-select').value;
+            const bedtimeStart = document.getElementById('bedtime-start-input').value;
+            const bedtimeEnd = document.getElementById('bedtime-end-input').value;
+            
+            localStorage.setItem('admin_focus_mode', focus);
+            localStorage.setItem('admin_bedtime_start', bedtimeStart);
+            localStorage.setItem('admin_bedtime_end', bedtimeEnd);
+            
+            alert("Focus and Bedtime settings saved!");
+        }
+
+        function drawAnalyticsChart() {
+            const canvas = document.getElementById('analytics-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const data = [40, 25, 20, 15]; // percentages
+            const colors = ['#6BCB77', '#00F2FF', '#FFD93D', '#e84393'];
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 10;
+            
+            let total = data.reduce((sum, val) => sum + val, 0);
+            let startAngle = -Math.PI / 2; // start from top
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            data.forEach((val, idx) => {
+                let sliceAngle = (val / total) * (Math.PI * 2);
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                ctx.strokeStyle = colors[idx];
+                ctx.lineWidth = 16;
+                ctx.stroke();
+                
+                // Add soft neon glow
+                ctx.shadowColor = colors[idx];
+                ctx.shadowBlur = 6;
+                ctx.stroke();
+                ctx.shadowBlur = 0; // reset
+                
+                startAngle += sliceAngle;
+            });
+            
+            ctx.font = '22px sans-serif';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('📊', centerX, centerY);
         }
 
         function saveStats() {

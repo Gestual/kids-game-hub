@@ -59,6 +59,7 @@
                     <option value="es">Español</option>
                 </select>
                 <button id="energy-btn">⚡ <span id="energy-count">5</span></button>
+                <button id="achievements-btn" onclick="Hub.openAchievements()" style="background: var(--glass); border: 2px solid var(--glass-border); color: white; padding: 10px 15px; border-radius: 12px; font-family: var(--font-heading); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.2s; margin-left: 10px;">🏆</button>
             </div>
         </header>
 
@@ -125,6 +126,8 @@
                         onclick="Hub.switchPersonalizeTab('cards')">Avatars</button>
                     <button class="personalize-tab-btn" data-i18n="tab_acc" data-tab="accessories"
                         onclick="Hub.switchPersonalizeTab('accessories')">Accessories</button>
+                    <button class="personalize-tab-btn" data-tab="pet"
+                        onclick="Hub.switchPersonalizeTab('pet')">My Pet 🐣</button>
                 </div>
 
                 <div id="personalize-display" class="collectibles-grid">
@@ -164,6 +167,19 @@
         <div id="play-paused-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 12, 18, 0.95); backdrop-filter: blur(15px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2999; gap: 20px;">
             <h2 id="lbl-play-paused-title" style="font-family: 'Luckiest Guy', cursive; font-size: 3.5rem; color: var(--accent); text-shadow: 0 0 15px rgba(0, 242, 255, 0.4); margin: 0;">GAME PAUSED</h2>
             <button id="btn-play-resume" onclick="Hub.togglePlayTimerPause()" style="background: linear-gradient(135deg, var(--accent-tertiary), var(--accent)); color: white; padding: 15px 40px; border-radius: 18px; font-family: 'Luckiest Guy', cursive; font-size: 1.5rem; border: none; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: all 0.1s ease;">▶️ RESUME</button>
+        </div>
+
+        <!-- Dedicated Achievements Modal -->
+        <div id="achievements-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 2800; display: flex; align-items: center; justify-content: center;">
+            <div class="modal-content" style="background: var(--glass); border: 3px solid var(--accent); border-radius: 30px; padding: 30px; text-align: center; max-width: 500px; width: 90%; max-height: 80%; overflow-y: auto; box-shadow: 0 0 35px rgba(0,242,255,0.25);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--glass-border); padding-bottom: 10px;">
+                    <h2 style="font-family: var(--font-heading); font-size: 2.2rem; color: var(--accent); margin: 0;">TROPHY ROOM 🏆</h2>
+                    <button class="close-modal" onclick="Hub.closeAchievements()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">✖</button>
+                </div>
+                <div id="achievements-list" style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
+                    <!-- Achievement items will be injected here dynamically -->
+                </div>
+            </div>
         </div>
 
     </div>

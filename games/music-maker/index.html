@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Beat Sandbox - Kids Game Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- HUD Header -->
+        <div id="hud">
+            <button class="hub-back-btn" onclick="HubAPI.close()">← BACK</button>
+            <div id="title-text">BEAT SANDBOX 🎵</div>
+            <div id="controls-panel">
+                <button id="btn-play" class="btn-ctrl primary" onclick="togglePlay()">PLAY ▶️</button>
+                <button class="btn-ctrl secondary" onclick="clearGrid()">CLEAR 🗑️</button>
+                <div class="bpm-control">
+                    <span>SPEED:</span>
+                    <select id="bpm-select" onchange="updateBPM()">
+                        <option value="100">100 BPM (Chill)</option>
+                        <option value="120" selected>120 BPM (Medium)</option>
+                        <option value="140">140 BPM (Fast!)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sequencer Grid -->
+        <div id="sequencer-card" class="card">
+            <div id="labels-column">
+                <div class="row-label" style="color: #ff0055;">🌟 Chime</div>
+                <div class="row-label" style="color: #ff92ad;">🎹 Synth H</div>
+                <div class="row-label" style="color: #00f2ff;">🎹 Synth M</div>
+                <div class="row-label" style="color: #00ff88;">🎹 Synth L</div>
+                <div class="row-label" style="color: #ffd93d;">🎸 Bass</div>
+                <div class="row-label" style="color: #e84393;">⚡ Cymbal</div>
+                <div class="row-label" style="color: #7000ff;">🥁 Snare</div>
+                <div class="row-label" style="color: #ff9800;">🥁 Kick</div>
+            </div>
+            <div id="grid-container">
+                <div id="sequencer-grid"></div>
+            </div>
+        </div>
+
+        <!-- Footer actions -->
+        <div id="actions-panel">
+            <button class="btn-action" onclick="finishBeat()">SAVE BEAT & EARN REWARDS 💾</button>
+        </div>
+    </div>
+
+    <!-- Hub API integration -->
+    <script>
+        const HubAPI = {
+            close() {
+                if (window.parent && window.parent.Hub) {
+                    window.parent.postMessage({ type: 'closeGame' }, '*');
+                }
+            },
+            complete(xp, coins) {
+                if (window.parent && window.parent.Hub) {
+                    window.parent.postMessage({ type: 'game_complete', xp: xp, coins: coins }, '*');
+                }
+            }
+        };
+    </script>
+    <script src="game.js"></script>
+</body>
+</html>
