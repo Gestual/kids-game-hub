@@ -295,19 +295,91 @@ body {
 /* Mobile Adjustments */
 @media (max-width: 768px) {
     #speech-bubble {
-        font-size: 1rem;
-        padding: 10px 15px;
-        width: 60%;
-        left: 35%;
+        font-size: 1.1rem;
+        padding: 8px 15px;
+        width: auto;
+        max-width: 75%;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 10%;
+    }
+
+    #speech-bubble::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #speech-bubble::before {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #recipe-tracker {
+        top: 25%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1.1rem;
+        padding: 5px 10px;
+        margin-top: 5px;
     }
 
     #pantry-area {
-        width: 45%;
-        right: 2%;
+        top: auto;
+        bottom: 10px;
+        right: 5%;
+        left: 5%;
+        width: 90%;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 3px solid #8b5a2b;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        padding: 5px 10px;
+        box-sizing: border-box;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .pantry-grid {
+        display: flex;
+        flex-direction: row;
+        width: auto;
+        gap: 10px;
+        height: 100%;
+        align-items: center;
+        box-sizing: border-box;
     }
 
     .draggable-item {
+        width: 70px;
+        height: 70px;
+        flex-shrink: 0;
         border-width: 2px;
         border-radius: 10px;
+        box-sizing: border-box;
+    }
+
+    .cauldron-zone {
+        bottom: 24%;
+        left: 35%;
+        width: 30%;
+        height: 25%;
+    }
+
+    .hub-back-btn {
+        top: 10px;
+        left: 10px;
+        font-size: 1rem;
+        padding: 6px 12px;
+    }
+
+    #level-indicator {
+        bottom: auto;
+        top: 10px;
+        right: 10px;
+        font-size: 1.1rem;
+        padding: 6px 12px;
+        border-width: 2px;
     }
 }

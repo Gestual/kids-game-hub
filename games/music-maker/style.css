@@ -141,16 +141,142 @@ body, html {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    width: 100px;
+    width: 140px;
 }
 
-.row-label {
+.instrument-select {
+    width: 100%;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    border-radius: 8px;
+    color: white;
+    font-family: inherit;
     font-weight: bold;
-    font-size: 0.95rem;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    height: 40px;
+    font-size: 0.85rem;
+    padding: 0 5px;
+    outline: none;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-sizing: border-box;
+}
+
+.instrument-select:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Page Selector Control Bar */
+#page-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.page-btn {
+    background: var(--glass);
+    border: 2px solid var(--glass-border);
+    color: #aaa;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-family: var(--font-main);
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.page-btn:hover {
+    color: white;
+    border-color: rgba(255,255,255,0.2);
+}
+
+.page-btn.active {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 10px rgba(0, 242, 255, 0.2);
+}
+
+/* Chord Progression & Arp Control Bar */
+#progression-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--glass);
+    border: 2px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.chord-progression {
     display: flex;
     align-items: center;
+    gap: 10px;
+}
+
+.chord-progression span {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    color: var(--accent-blue);
+}
+
+.chord-select-group {
+    display: flex;
+    gap: 8px;
+}
+
+.chord-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.chord-item label {
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: bold;
+}
+
+.chord-select {
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    color: white;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+}
+
+.arp-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+}
+
+.arp-control span {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    color: var(--accent-green);
+}
+
+#arp-select {
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    color: white;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
 }
 
 #grid-container {

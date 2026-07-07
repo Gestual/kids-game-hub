@@ -27,17 +27,195 @@
             </div>
         </div>
 
+        <!-- Chord Progression & Arp Control Bar -->
+        <div id="progression-panel">
+            <div class="chord-progression">
+                <span>CHORDS:</span>
+                <div class="chord-select-group">
+                    <div class="chord-item">
+                        <label>BEAT 1-4</label>
+                        <select id="chord-select-0" class="chord-select" onchange="updateChords()">
+                            <option value="C" selected>C Major</option>
+                            <option value="G">G Major</option>
+                            <option value="Am">A Minor</option>
+                            <option value="F">F Major</option>
+                            <option value="Dm">D Minor</option>
+                            <option value="Em">E Minor</option>
+                            <option value="Bb">Bb Major</option>
+                        </select>
+                    </div>
+                    <div class="chord-item">
+                        <label>BEAT 5-8</label>
+                        <select id="chord-select-1" class="chord-select" onchange="updateChords()">
+                            <option value="C">C Major</option>
+                            <option value="G">G Major</option>
+                            <option value="Am" selected>A Minor</option>
+                            <option value="F">F Major</option>
+                            <option value="Dm">D Minor</option>
+                            <option value="Em">E Minor</option>
+                            <option value="Bb">Bb Major</option>
+                        </select>
+                    </div>
+                    <div class="chord-item">
+                        <label>BEAT 9-12</label>
+                        <select id="chord-select-2" class="chord-select" onchange="updateChords()">
+                            <option value="C">C Major</option>
+                            <option value="G">G Major</option>
+                            <option value="Am">A Minor</option>
+                            <option value="F" selected>F Major</option>
+                            <option value="Dm">D Minor</option>
+                            <option value="Em">E Minor</option>
+                            <option value="Bb">Bb Major</option>
+                        </select>
+                    </div>
+                    <div class="chord-item">
+                        <label>BEAT 13-16</label>
+                        <select id="chord-select-3" class="chord-select" onchange="updateChords()">
+                            <option value="C">C Major</option>
+                            <option value="G" selected>G Major</option>
+                            <option value="Am">A Minor</option>
+                            <option value="F">F Major</option>
+                            <option value="Dm">D Minor</option>
+                            <option value="Em">E Minor</option>
+                            <option value="Bb">Bb Major</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="arp-control">
+                <span>ARPEGGIATOR:</span>
+                <select id="arp-select" onchange="updateArp()">
+                    <option value="off" selected>Off (Harmony)</option>
+                    <option value="up">Up 📈</option>
+                    <option value="down">Down 📉</option>
+                    <option value="bounce">Bounce 🔀</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Page Switcher Bar -->
+        <div id="page-controls">
+            <button class="page-btn active" id="page-btn-0" onclick="setPage(0)">Page 1 (Steps 1-16)</button>
+            <button class="page-btn" id="page-btn-1" onclick="setPage(1)">Page 2 (Steps 17-32)</button>
+            <button class="page-btn" id="page-btn-2" onclick="setPage(2)">Page 3 (Steps 33-48)</button>
+            <button class="page-btn" id="page-btn-3" onclick="setPage(3)">Page 4 (Steps 49-64)</button>
+        </div>
+
         <!-- Sequencer Grid -->
         <div id="sequencer-card" class="card">
             <div id="labels-column">
-                <div class="row-label" style="color: #ff0055;">🌟 Chime</div>
-                <div class="row-label" style="color: #ff92ad;">🎹 Synth H</div>
-                <div class="row-label" style="color: #00f2ff;">🎹 Synth M</div>
-                <div class="row-label" style="color: #00ff88;">🎹 Synth L</div>
-                <div class="row-label" style="color: #ffd93d;">🎸 Bass</div>
-                <div class="row-label" style="color: #e84393;">⚡ Cymbal</div>
-                <div class="row-label" style="color: #7000ff;">🥁 Snare</div>
-                <div class="row-label" style="color: #ff9800;">🥁 Kick</div>
+                <select id="instrument-row-0" class="instrument-select" style="border-left: 5px solid #ff0055;" onchange="changeRowInstrument(0)">
+                    <option value="chime" selected>🌟 Chime</option>
+                    <option value="sine">🎹 Sine Synth</option>
+                    <option value="square">🕹️ Retro Synth</option>
+                    <option value="saw">⚡ Buzz Synth</option>
+                    <option value="triangle">🎸 Bass Synth</option>
+                    <option value="kick">🥁 Kick Drum</option>
+                    <option value="snare">🥁 Snare Drum</option>
+                    <option value="hihat">✨ Hi-Hat</option>
+                    <option value="cymbal">💥 Cymbal</option>
+                    <option value="cowbell">🔔 Cowbell</option>
+                    <option value="laser">🔫 Retro Laser</option>
+                    <option value="warp">Alien Warp</option>
+                </select>
+                <select id="instrument-row-1" class="instrument-select" style="border-left: 5px solid #ff92ad;" onchange="changeRowInstrument(1)">
+                    <option value="chime">🌟 Chime</option>
+                    <option value="sine" selected>🎹 Sine Synth</option>
+                    <option value="square">🕹️ Retro Synth</option>
+                    <option value="saw">⚡ Buzz Synth</option>
+                    <option value="triangle">🎸 Bass Synth</option>
+                    <option value="kick">🥁 Kick Drum</option>
+                    <option value="snare">🥁 Snare Drum</option>
+                    <option value="hihat">✨ Hi-Hat</option>
+                    <option value="cymbal">💥 Cymbal</option>
+                    <option value="cowbell">🔔 Cowbell</option>
+                    <option value="laser">🔫 Retro Laser</option>
+                    <option value="warp">Alien Warp</option>
+                </select>
+                <select id="instrument-row-2" class="instrument-select" style="border-left: 5px solid #00f2ff;" onchange="changeRowInstrument(2)">
+                    <option value="chime">🌟 Chime</option>
+                    <option value="sine" selected>🎹 Sine Synth</option>
+                    <option value="square">🕹️ Retro Synth</option>
+                    <option value="saw">⚡ Buzz Synth</option>
+                    <option value="triangle">🎸 Bass Synth</option>
+                    <option value="kick">🥁 Kick Drum</option>
+                    <option value="snare">🥁 Snare Drum</option>
+                    <option value="hihat">✨ Hi-Hat</option>
+                    <option value="cymbal">💥 Cymbal</option>
+                    <option value="cowbell">🔔 Cowbell</option>
+                    <option value="laser">🔫 Retro Laser</option>
+                    <option value="warp">Alien Warp</option>
+                </select>
+                <select id="instrument-row-3" class="instrument-select" style="border-left: 5px solid #00ff88;" onchange="changeRowInstrument(3)">
+                    <option value="chime">🌟 Chime</option>
+                    <option value="sine" selected>🎹 Sine Synth</option>
+                    <option value="square">🕹️ Retro Synth</option>
+                    <option value="saw">⚡ Buzz Synth</option>
+                    <option value="triangle">🎸 Bass Synth</option>
+                    <option value="kick">🥁 Kick Drum</option>
+                    <option value="snare">🥁 Snare Drum</option>
+                    <option value="hihat">✨ Hi-Hat</option>
+                    <option value="cymbal">💥 Cymbal</option>
+                    <option value="cowbell">🔔 Cowbell</option>
+                    <option value="laser">🔫 Retro Laser</option>
+                    <option value="warp">Alien Warp</option>
+                </select>
+                <select id="instrument-row-4" class="instrument-select" style="border-left: 5px solid #ffd93d;" onchange="changeRowInstrument(4)">
+                    <option value="chime">🌟 Chime</option>
+                    <option value="sine">🎹 Sine Synth</option>
+                    <option value="square">🕹️ Retro Synth</option>
+                    <option value="saw">⚡ Buzz Synth</option>
+                    <option value="triangle" selected>🎸 Bass Synth</option>
+                    <option value="kick">🥁 Kick Drum</option>
+                    <option value="snare">🥁 Snare Drum</option>
+                    <option value="hihat">✨ Hi-Hat</option>
+                    <option value="cymbal">💥 Cymbal</option>
+                    <option value="cowbell">🔔 Cowbell</option>
+                    <option value="laser">🔫 Retro Laser</option>
+                    <option value="warp">Alien Warp</option>
+                </select>
+                <select id="instrument-row-5" class="instrument-select" style="border-left: 5px solid #e84393;" onchange="changeRowInstrument(5)">
+                    <option value="chime">🌟 Chime</option>
+                    <option value="sine">🎹 Sine Synth</option>
+                    <option value="square">🕹️ Retro Synth</option>
+                    <option value="saw">⚡ Buzz Synth</option>
+                    <option value="triangle">🎸 Bass Synth</option>
+                    <option value="kick">🥁 Kick Drum</option>
+                    <option value="snare">🥁 Snare Drum</option>
+                    <option value="hihat">✨ Hi-Hat</option>
+                    <option value="cymbal" selected>💥 Cymbal</option>
+                    <option value="cowbell">🔔 Cowbell</option>
+                    <option value="laser">🔫 Retro Laser</option>
+                    <option value="warp">Alien Warp</option>
+                </select>
+                <select id="instrument-row-6" class="instrument-select" style="border-left: 5px solid #7000ff;" onchange="changeRowInstrument(6)">
+                    <option value="chime">🌟 Chime</option>
+                    <option value="sine">🎹 Sine Synth</option>
+                    <option value="square">🕹️ Retro Synth</option>
+                    <option value="saw">⚡ Buzz Synth</option>
+                    <option value="triangle">🎸 Bass Synth</option>
+                    <option value="kick">🥁 Kick Drum</option>
+                    <option value="snare" selected>🥁 Snare Drum</option>
+                    <option value="hihat">✨ Hi-Hat</option>
+                    <option value="cymbal">💥 Cymbal</option>
+                    <option value="cowbell">🔔 Cowbell</option>
+                    <option value="laser">🔫 Retro Laser</option>
+                    <option value="warp">Alien Warp</option>
+                </select>
+                <select id="instrument-row-7" class="instrument-select" style="border-left: 5px solid #ff9800;" onchange="changeRowInstrument(7)">
+                    <option value="chime">🌟 Chime</option>
+                    <option value="sine">🎹 Sine Synth</option>
+                    <option value="square">🕹️ Retro Synth</option>
+                    <option value="saw">⚡ Buzz Synth</option>
+                    <option value="triangle">🎸 Bass Synth</option>
+                    <option value="kick" selected>🥁 Kick Drum</option>
+                    <option value="snare">🥁 Snare Drum</option>
+                    <option value="hihat">✨ Hi-Hat</option>
+                    <option value="cymbal">💥 Cymbal</option>
+                    <option value="cowbell">🔔 Cowbell</option>
+                    <option value="laser">🔫 Retro Laser</option>
+                    <option value="warp">Alien Warp</option>
+                </select>
             </div>
             <div id="grid-container">
                 <div id="sequencer-grid"></div>
