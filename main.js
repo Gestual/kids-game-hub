@@ -188,6 +188,7 @@ const Hub = {
         this.setupMessageListener();
         this.updateUI();
         this.rotateAds();
+        this.initPlayTimerUI();
     },
 
     setupMessageListener() {
@@ -640,11 +641,20 @@ const Hub = {
     },
 
     checkAndResumeRest() {
-        const isDisabled = localStorage.getItem('admin_disable_timer') === 'true';
-        if (isDisabled) {
+        const enabled = localStorage.getItem('admin_enable_play_timer') !== 'false';
+        if (!enabled) {
             this.state.isResting = false;
-            this.state.continuousPlayMinutes = 0;
             this.state.restUntil = 0;
+            const limitMinutes = parseInt(localStorage.getItem('admin_play_timer_minutes') || '10');
+            this.state.playTimeRemaining = limitMinutes * 60;
+            this.state.isPlayTimerPaused = false;
+            
+            const restScreen = document.getElementById('rest-message');
+            if (restScreen) restScreen.classList.add('hidden');
+            
+            const pauseOverlay = document.getElementById('play-paused-overlay');
+            if (pauseOverlay) pauseOverlay.classList.add('hidden');
+            
             this.saveState();
             return;
         }
@@ -656,14 +666,21 @@ const Hub = {
                 this.triggerRestSession(remaining);
             } else {
                 this.state.isResting = false;
-                this.state.continuousPlayMinutes = 0;
                 this.state.restUntil = 0;
+                const limitMinutes = parseInt(localStorage.getItem('admin_play_timer_minutes') || '10');
+                this.state.playTimeRemaining = limitMinutes * 60;
                 this.saveState();
+            }
+        } else {
+            if (this.state.playTimeRemaining === undefined || this.state.playTimeRemaining <= 0) {
+                const limitMinutes = parseInt(localStorage.getItem('admin_play_timer_minutes') || '10');
+                this.state.playTimeRemaining = limitMinutes * 60;
             }
         }
     },
 
     startTimers() {
+        // Energy recharge timer
         setInterval(() => {
             if (this.state.energy < 5) {
                 this.state.energy++;
@@ -672,27 +689,41 @@ const Hub = {
             }
         }, 60000);
 
+        // Second-by-second Play Timer Countdown
         setInterval(() => {
-            if (localStorage.getItem('admin_disable_timer') === 'true') {
-                if (this.state.isResting || this.state.continuousPlayMinutes > 0) {
-                    this.state.isResting = false;
-                    this.state.continuousPlayMinutes = 0;
-                    this.state.restUntil = 0;
-                    const restScreen = document.getElementById('rest-message');
-                    if (restScreen) restScreen.classList.add('hidden');
-                    this.saveState();
-                }
+            const enabled = localStorage.getItem('admin_enable_play_timer') !== 'false';
+            const control = document.getElementById('play-timer-control');
+            
+            if (!enabled) {
+                if (control) control.style.display = 'none';
+                return;
+            } else {
+                if (control) control.style.display = 'flex';
+            }
+
+            if (this.state.isResting) {
                 return;
             }
 
-            if (!this.state.isResting) {
-                this.state.continuousPlayMinutes++;
-                if (this.state.continuousPlayMinutes >= 20) {
+            if (this.state.isPlayTimerPaused) {
+                return;
+            }
+
+            if (this.state.playTimeRemaining === undefined) {
+                const limitMinutes = parseInt(localStorage.getItem('admin_play_timer_minutes') || '10');
+                this.state.playTimeRemaining = limitMinutes * 60;
+            }
+
+            if (this.state.playTimeRemaining > 0) {
+                this.state.playTimeRemaining--;
+                this.updatePlayTimerDisplay();
+                this.saveState();
+
+                if (this.state.playTimeRemaining <= 0) {
                     this.triggerRestSession();
                 }
-                this.saveState();
             }
-        }, 60000);
+        }, 1000);
     },
 
     triggerRestSession(timeLeft = 300) {
@@ -723,13 +754,17 @@ const Hub = {
         updateTimerDisplay();
 
         this.restInterval = setInterval(() => {
-            if (localStorage.getItem('admin_disable_timer') === 'true') {
+            const enabled = localStorage.getItem('admin_enable_play_timer') !== 'false';
+            if (!enabled) {
                 clearInterval(this.restInterval);
                 this.state.isResting = false;
-                this.state.continuousPlayMinutes = 0;
                 this.state.restUntil = 0;
+                const limitMinutes = parseInt(localStorage.getItem('admin_play_timer_minutes') || '10');
+                this.state.playTimeRemaining = limitMinutes * 60;
+                this.state.isPlayTimerPaused = false;
                 if (restScreen) restScreen.classList.add('hidden');
                 this.saveState();
+                this.updatePlayTimerDisplay();
                 return;
             }
 
@@ -739,12 +774,74 @@ const Hub = {
             if (timeLeft <= 0) {
                 clearInterval(this.restInterval);
                 this.state.isResting = false;
-                this.state.continuousPlayMinutes = 0;
                 this.state.restUntil = 0;
+                const limitMinutes = parseInt(localStorage.getItem('admin_play_timer_minutes') || '10');
+                this.state.playTimeRemaining = limitMinutes * 60;
+                this.state.isPlayTimerPaused = false;
                 if (restScreen) restScreen.classList.add('hidden');
                 this.saveState();
+                this.updatePlayTimerDisplay();
             }
         }, 1000);
+    },
+
+    initPlayTimerUI() {
+        const overlay = document.getElementById('play-paused-overlay');
+        const pauseBtn = document.getElementById('play-timer-btn');
+        if (this.state.isPlayTimerPaused) {
+            if (overlay) overlay.classList.remove('hidden');
+            if (pauseBtn) pauseBtn.textContent = '▶️';
+        } else {
+            if (overlay) overlay.classList.add('hidden');
+            if (pauseBtn) pauseBtn.textContent = '⏸️';
+        }
+        this.updatePlayTimerDisplay();
+        
+        // Listen to storage events from other tabs (like the admin panel)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'kids_hub_state' || e.key === 'admin_enable_play_timer' || e.key === 'admin_play_timer_minutes') {
+                this.loadState();
+                this.checkAndResumeRest();
+                this.updatePlayTimerDisplay();
+                this.initPlayTimerUI();
+            }
+        });
+    },
+
+    togglePlayTimerPause() {
+        this.state.isPlayTimerPaused = !this.state.isPlayTimerPaused;
+        const overlay = document.getElementById('play-paused-overlay');
+        const pauseBtn = document.getElementById('play-timer-btn');
+        
+        if (this.state.isPlayTimerPaused) {
+            if (overlay) overlay.classList.remove('hidden');
+            if (pauseBtn) pauseBtn.textContent = '▶️';
+        } else {
+            if (overlay) overlay.classList.add('hidden');
+            if (pauseBtn) pauseBtn.textContent = '⏸️';
+        }
+        this.saveState();
+    },
+
+    updatePlayTimerDisplay() {
+        const display = document.getElementById('play-timer-display');
+        if (!display) return;
+        
+        if (this.state.playTimeRemaining === undefined) {
+            const limitMinutes = parseInt(localStorage.getItem('admin_play_timer_minutes') || '10');
+            this.state.playTimeRemaining = limitMinutes * 60;
+        }
+        
+        const totalSecs = this.state.playTimeRemaining;
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        if (totalSecs <= 60) {
+            display.style.color = '#ff0055';
+        } else {
+            display.style.color = '#00f2ff';
+        }
     }
 };
 

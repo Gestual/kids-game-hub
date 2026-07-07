@@ -166,8 +166,18 @@
             </div>
             <div class="input-group" style="margin-top: 20px;">
                 <label>
-                    <input type="checkbox" id="disable-timer-cb"> Disable Rest Timer (No 5-min breaks)
+                    <input type="checkbox" id="enable-play-timer-cb"> Enable Play Time Limit (Forces 5-min breaks after play time ends)
                 </label>
+            </div>
+            <div class="input-group" style="margin-top: 10px;">
+                <label>Play Time Limit</label>
+                <select id="play-timer-minutes-select" style="padding: 10px; border: 2px solid #ddd; border-radius: 10px; font-family: inherit;">
+                    <option value="5">5 Minutes</option>
+                    <option value="10">10 Minutes</option>
+                    <option value="15">15 Minutes</option>
+                    <option value="20">20 Minutes</option>
+                    <option value="30">30 Minutes</option>
+                </select>
             </div>
             <div class="btn-row" style="margin-top: 15px;">
                 <button onclick="saveStats()">Save Player Stats</button>
@@ -209,7 +219,10 @@
             document.getElementById('level-input').value = state.level || 1;
             document.getElementById('coins-input').value = state.coins || 100;
             document.getElementById('energy-input').value = state.energy || 5;
-            document.getElementById('disable-timer-cb').checked = localStorage.getItem('admin_disable_timer') === 'true';
+            
+            const playTimerEnabled = localStorage.getItem('admin_enable_play_timer') !== 'false';
+            document.getElementById('enable-play-timer-cb').checked = playTimerEnabled;
+            document.getElementById('play-timer-minutes-select').value = localStorage.getItem('admin_play_timer_minutes') || '10';
         }
 
         function saveStats() {
@@ -219,16 +232,28 @@
             state.energy = parseInt(document.getElementById('energy-input').value);
             localStorage.setItem('kids_hub_state', JSON.stringify(state));
 
-            const disableTimer = document.getElementById('disable-timer-cb').checked;
-            localStorage.setItem('admin_disable_timer', disableTimer ? 'true' : 'false');
+            const playTimerEnabled = document.getElementById('enable-play-timer-cb').checked;
+            localStorage.setItem('admin_enable_play_timer', playTimerEnabled ? 'true' : 'false');
+            localStorage.setItem('admin_disable_timer', playTimerEnabled ? 'false' : 'true');
+
+            const minutes = document.getElementById('play-timer-minutes-select').value;
+            localStorage.setItem('admin_play_timer_minutes', minutes);
+
+            if (playTimerEnabled) {
+                state.playTimeRemaining = parseInt(minutes) * 60;
+                state.isPlayTimerPaused = false;
+            }
+            localStorage.setItem('kids_hub_state', JSON.stringify(state));
 
             alert("Stats and Settings saved!");
         }
 
         function resetPlayTimer() {
             state.isResting = false;
-            state.continuousPlayMinutes = 0;
             state.restUntil = 0;
+            state.isPlayTimerPaused = false;
+            const minutes = localStorage.getItem('admin_play_timer_minutes') || '10';
+            state.playTimeRemaining = parseInt(minutes) * 60;
             localStorage.setItem('kids_hub_state', JSON.stringify(state));
             alert("Play timer reset and active breaks cleared!");
         }
