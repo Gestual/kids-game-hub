@@ -141,7 +141,6 @@ function setupLevel() {
     generateRecipe();
     updateRecipeUI();
     populatePantry();
-    setupDragAndDrop();
 
     // Speak the request
     const speechEl = document.getElementById('speech-text');
